@@ -1,0 +1,4 @@
+import Link from "next/link";
+import type { SubmissionWithDetails } from "@/types";
+interface SubmissionCardProps { submission: SubmissionWithDetails; }
+export default function SubmissionCard({ submission }: SubmissionCardProps) { return <Link href={`/admin/submissions/${submission.id}`} className="block rounded-xl border border-white/10 bg-white/[0.04] p-4 transition hover:border-cyan-400/40"><div className="flex justify-between gap-3"><div><p className="font-medium">{submission.userName ?? submission.userEmail}</p><p className="text-sm text-zinc-400">{submission.projectTitle} · {submission.trackTitle}</p></div><span className="text-xs text-zinc-400">{submission.status}</span></div><p className="mt-2 text-xs text-zinc-500">{new Date(submission.submittedAt).toLocaleDateString()}</p></Link>; }

@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";
+import { getAdminSubmission } from "@/lib/submissionAdmin";
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) { try { const { id } = await params; const { supabase, submission } = await getAdminSubmission(id); if (!supabase) return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); if (!submission) return NextResponse.json({ error: "Submission not found" }, { status: 404 }); return NextResponse.json({ data: submission }); } catch { return NextResponse.json({ error: "Unable to load submission" }, { status: 500 }); } }

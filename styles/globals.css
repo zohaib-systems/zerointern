@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0b0f;
+  --foreground: #f5f5f5;
+  --muted: #a1a1aa;
+  --panel: #111827;
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --brand: #20a562;
+  --brand-bright: #10b981;
+  --brand-dark: #047857;
+  --brand-soft: rgba(32, 165, 98, 0.12);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #65d69a;
+  outline-offset: 3px;
+}
+
+.text-cyan-200,
+.hover\:text-cyan-200:hover { color: #a7f3d0 !important; }
+.text-cyan-300,
+.hover\:text-cyan-300:hover { color: #65d69a !important; }
+.text-cyan-400,
+.hover\:text-cyan-400:hover { color: #34d399 !important; }
+.text-cyan-500 { color: #20a562 !important; }
+.bg-cyan-400 { background-color: #34d399 !important; }
+.bg-cyan-500 { background-color: #20a562 !important; }
+.hover\:bg-cyan-400:hover { background-color: #10b981 !important; }
+.border-cyan-400,
+.focus\:border-cyan-400:focus { border-color: #34d399 !important; }
+.border-cyan-400\/30 { border-color: rgba(32, 165, 98, 0.3) !important; }
+.border-cyan-400\/40 { border-color: rgba(32, 165, 98, 0.4) !important; }
+.bg-cyan-500\/10 { background-color: rgba(32, 165, 98, 0.1) !important; }
+.bg-cyan-400\/10 { background-color: rgba(32, 165, 98, 0.1) !important; }
+.border-t-cyan-400 { border-top-color: #34d399 !important; }
+.focus-visible\:outline-cyan-300:focus-visible { outline-color: #65d69a !important; }
