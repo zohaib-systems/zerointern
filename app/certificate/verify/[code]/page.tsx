@@ -1,12 +1,196 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getCertificateData } from "@/lib/certificateData";
+import Image from "next/image";
+import { getCertificateData, type PublicCertificateData } from "@/lib/certificateData";
 import { createServiceClient } from "@/lib/supabase/service";
-import Navbar from "@/components/common/Navbar";
+import CopyFingerprintButton from "@/components/certificate/CopyFingerprintButton";
 
-export default async function VerifyCertificatePage({ params }: { params: Promise<{ code: string }> }) {
+function getDisplayTrackName(trackName: string) {
+  return trackName.trim().toLowerCase() === "full stack javascript"
+    ? "Full-Stack JavaScript Development"
+    : trackName;
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "Not specified";
+  return new Date(value).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function getStatusPresentation(certificate: PublicCertificateData | null) {
+  if (!certificate) {
+    return {
+      label: "CREDENTIAL NOT FOUND",
+      message: "We could not verify a Zero Intern credential with this ID.",
+      tone: "border-[#9B2C2C]/25 bg-[#FFF8F7] text-[#7F1D1D]",
+      icon: "!",
+    };
+  }
+
+  if (!certificate.integrityValid) {
+    return {
+      label: "INTEGRITY CHECK FAILED",
+      message: "The credential record was found, but its cryptographic fingerprint does not match the expected value.",
+      tone: "border-[#9B2C2C]/25 bg-[#FFF8F7] text-[#7F1D1D]",
+      icon: "!",
+    };
+  }
+
+  if (certificate.status === "revoked") {
+    return {
+      label: "CREDENTIAL REVOKED",
+      message: "This credential was issued by Zero Intern but is no longer considered valid.",
+      tone: "border-[#9B2C2C]/25 bg-[#FFF8F7] text-[#7F1D1D]",
+      icon: "!",
+    };
+  }
+
+  if (certificate.status === "expired") {
+    return {
+      label: "CREDENTIAL EXPIRED",
+      message: "This credential was valid when issued but has passed its validity period.",
+      tone: "border-[#B7791F]/30 bg-[#FFFCF3] text-[#8A5A12]",
+      icon: "!",
+    };
+  }
+
+  return {
+    label: "VERIFIED CREDENTIAL",
+    message: "This credential has been verified as an authentic credential issued by Zero Intern.",
+    tone: "border-[#0B7A53]/25 bg-[#F4FAF7] text-[#065F46]",
+    icon: "✓",
+  };
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-b border-[#DDE6E2] py-4 last:border-b-0">
+      <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#526171]">{label}</dt>
+      <dd className="mt-1 text-base text-[#07111F]">{value}</dd>
+    </div>
+  );
+}
+
+export default async function VerifyCertificatePage({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}) {
   const { code } = await params;
-  const certificate = await getCertificateData(createServiceClient(), code);
-  if (!certificate) notFound();
-  return <main className="min-h-screen bg-[#0b0b0f] text-white"><Navbar /><section className="mx-auto max-w-5xl px-6 py-12 sm:py-16"><div className="mb-8 flex items-center justify-between gap-4"><Link href="/" className="text-sm text-zinc-400 transition hover:text-white">← ZeroIntern home</Link><span className="rounded-full border border-[#20A562]/40 bg-[#20A562]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#65d69a]">Public verification</span></div><article className="overflow-hidden rounded-2xl border border-[#20A562]/60 bg-[#f8faf9] text-slate-900 shadow-[0_18px_60px_rgba(16,185,129,0.08)]"><div className="border-b border-slate-200 px-6 py-8 sm:px-12 sm:py-10"><div className="flex flex-wrap items-start justify-between gap-6"><div><p className="text-xs font-bold uppercase tracking-[0.24em] text-[#047857]">Cryptographically verified</p><h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-5xl">{certificate.studentName}</h1><p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">Completed and delivered the verified production projects in</p><h2 className="mt-2 text-2xl font-bold text-[#047857] sm:text-3xl">{certificate.trackName}</h2></div><div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-left sm:min-w-44"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Credential ID</p><p className="mt-1 font-mono text-sm font-semibold text-[#047857]">{certificate.credentialId}</p></div></div></div><div className="px-6 py-8 sm:px-12 sm:py-10"><div className="flex items-center gap-3"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#20A562] text-sm font-bold text-white" aria-hidden="true">✓</span><h3 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-700">Approved projects</h3></div><ol className="mt-5 divide-y divide-slate-200 border-y border-slate-200">{certificate.projects.map((project) => <li key={project.projectOrder} className="flex items-center justify-between gap-4 py-4"><div className="flex min-w-0 items-center gap-4"><span className="font-mono text-sm font-bold text-[#047857]">0{project.projectOrder}</span><span className="truncate font-medium text-slate-800">{project.title}</span></div><div className="flex shrink-0 gap-3 text-xs font-semibold"><a href={project.repoUrl} target="_blank" rel="noreferrer" className="text-[#047857] transition hover:text-[#065f46]">Repository ↗</a><a href={project.liveUrl} target="_blank" rel="noreferrer" className="hidden text-[#047857] transition hover:text-[#065f46] sm:inline">Live project ↗</a></div></li>)}</ol><div className="mt-8 grid gap-6 border-t border-slate-200 pt-6 text-sm sm:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-wider text-slate-400">Issued</p><p className="mt-2 text-slate-700">{new Date(certificate.issuedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p></div><div><p className="text-xs font-bold uppercase tracking-wider text-slate-400">SHA-256 integrity hash</p><p className="mt-2 break-all font-mono text-xs text-slate-600">{certificate.cryptoHash}</p></div></div></div><div className="flex flex-col gap-2 border-t border-slate-200 bg-white px-6 py-5 text-xs font-semibold uppercase tracking-wider text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-12"><span>ZeroIntern verification engine</span><span className="flex items-center gap-2 text-[#047857]"><span className="h-2 w-2 rounded-full bg-[#20A562]" aria-hidden="true" /> Digitally verified</span></div></article></section></main>;
+  const isValidCode = /^ZI-[A-Z0-9]{6,32}$/i.test(code);
+  const certificate = isValidCode
+    ? await getCertificateData(createServiceClient(), code.toUpperCase())
+    : null;
+  const presentation = getStatusPresentation(certificate);
+  const displayTrack = certificate ? getDisplayTrackName(certificate.trackName) : "";
+  const previewUrl = certificate
+    ? `/api/certificates/download?code=${encodeURIComponent(certificate.credentialId)}&preview=true`
+    : "";
+
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-[#FEFEFC] text-[#07111F]">
+      <div className="pointer-events-none absolute right-[-4rem] top-32 hidden opacity-[0.045] md:block" aria-hidden="true">
+        <Image src="/icon1.png" alt="" width={288} height={288} className="h-72 w-72 object-contain" />
+      </div>
+
+      <header className="relative border-b border-[#72B39B] bg-[#07111F]">
+        <div className="mx-auto flex max-w-[1040px] items-center justify-between px-5 py-5 sm:px-8">
+          <Link href="/" className="flex items-center gap-3" aria-label="Zero Intern home">
+            <Image src="/icon1.png" alt="" width={40} height={40} className="h-10 w-10 object-contain" />
+            <span className="text-xl font-bold tracking-tight text-white">
+              Zero <span className="text-[#65D69A]">Intern</span>
+            </span>
+          </Link>
+          <p className="hidden text-[10px] font-bold uppercase tracking-[0.22em] text-[#D9EDE5] sm:block">
+            Official Credential Verification
+          </p>
+        </div>
+      </header>
+
+      <div className="relative mx-auto max-w-[1040px] px-5 pb-16 pt-10 sm:px-8 sm:pt-16">
+        <section className="border-b border-[#DDE6E2] pb-12 sm:pb-16" aria-labelledby="verification-heading">
+          <div className={`inline-flex items-center gap-3 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] ${presentation.tone}`} role="status">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full border border-current text-sm" aria-hidden="true">{presentation.icon}</span>
+            <span>{presentation.label}</span>
+          </div>
+          <h1 id="verification-heading" className="mt-8 max-w-3xl font-serif text-4xl leading-tight tracking-tight sm:text-6xl">
+            {certificate ? certificate.studentName : "Credential verification"}
+          </h1>
+          {certificate && <p className="mt-5 font-serif text-2xl leading-tight text-[#065F46] sm:text-3xl">{displayTrack}</p>}
+          <p className="mt-6 max-w-2xl text-base leading-7 text-[#526171]">{presentation.message}</p>
+          {certificate?.status === "revoked" && certificate.revocationReason && (
+            <p className="mt-4 text-sm text-[#7F1D1D]">Reason: {certificate.revocationReason}</p>
+          )}
+          {!certificate && <p className="mt-6 font-mono text-sm text-[#526171]">Queried ID: {code}</p>}
+        </section>
+
+        {certificate ? (
+          <>
+            <section className="grid gap-10 border-b border-[#DDE6E2] py-10 sm:grid-cols-[minmax(0,1fr)_220px] sm:py-14" aria-labelledby="details-heading">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0B7A53]">Credential record</p>
+                <h2 id="details-heading" className="mt-3 font-serif text-3xl">Credential Details</h2>
+                <dl className="mt-6 grid gap-x-10 sm:grid-cols-2">
+                  <Detail label="Credential ID" value={certificate.credentialId} />
+                  <Detail label="Credential Type" value="Certificate of Achievement" />
+                  <Detail label="Issued To" value={certificate.studentName} />
+                  <Detail label="Program" value={displayTrack} />
+                  <Detail label="Date Issued" value={formatDate(certificate.issuedAt)} />
+                  <Detail label="Current Status" value={certificate.status === "verified" ? "Verified" : certificate.status[0].toUpperCase() + certificate.status.slice(1)} />
+                  <Detail label="Issuer" value="Zero Intern" />
+                  {certificate.expiresAt && <Detail label="Expiration Date" value={formatDate(certificate.expiresAt)} />}
+                  {certificate.revokedAt && <Detail label="Revoked On" value={formatDate(certificate.revokedAt)} />}
+                </dl>
+              </div>
+              <aside className="self-start border-l border-[#DDE6E2] pl-6 sm:mt-12" aria-label="Credential summary">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#526171]">Issued by</p>
+                <p className="mt-2 font-serif text-2xl text-[#065F46]">Zero Intern</p>
+                <p className="mt-3 text-sm leading-6 text-[#526171]">Professional credentials with public verification and cryptographic integrity checks.</p>
+              </aside>
+            </section>
+
+            <section className="border-b border-[#DDE6E2] py-10 sm:py-14" aria-labelledby="crypto-heading">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0B7A53]">Security record</p>
+              <h2 id="crypto-heading" className="mt-3 font-serif text-3xl">Cryptographic Verification</h2>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#526171]">This credential includes a cryptographic fingerprint that can be used to verify its integrity.</p>
+              <div className="mt-7 flex flex-col gap-4 rounded-lg border border-[#DDE6E2] bg-white p-5 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#526171]">SHA-256 Fingerprint</p>
+                  <p className="mt-3 break-all font-mono text-xs leading-6 text-[#07111F]">{certificate.cryptoHash}</p>
+                </div>
+                <CopyFingerprintButton value={certificate.cryptoHash} />
+              </div>
+              <p className={`mt-4 text-sm font-semibold ${certificate.integrityValid ? "text-[#065F46]" : "text-[#7F1D1D]"}`}>
+                {certificate.integrityValid ? "✓ Credential integrity verified" : "! Credential integrity could not be verified"}
+              </p>
+            </section>
+
+            <section className="border-b border-[#DDE6E2] py-10 sm:py-14" aria-labelledby="certificate-heading">
+              <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0B7A53]">Official document</p>
+                  <h2 id="certificate-heading" className="mt-3 font-serif text-3xl">Certificate Preview</h2>
+                  <p className="mt-3 text-sm text-[#526171]">View the issued certificate in its original print format.</p>
+                </div>
+                <a href={previewUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#0B7A53] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#065F46]">View Certificate</a>
+              </div>
+            </section>
+          </>
+        ) : (
+          <section className="border-b border-[#DDE6E2] py-12" aria-labelledby="not-found-heading">
+            <h2 id="not-found-heading" className="font-serif text-3xl">Verify another credential</h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[#526171]">Check the credential ID printed on a Zero Intern certificate to verify its record.</p>
+            <Link href="/" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-md border border-[#0B7A53]/40 px-5 py-3 text-sm font-bold text-[#065F46]">Return to Zero Intern</Link>
+          </section>
+        )}
+
+        <footer className="flex flex-col gap-3 pt-8 text-xs text-[#526171] sm:flex-row sm:items-center sm:justify-between">
+          <span>Zero Intern Credential Verification System</span>
+          {certificate && <span className="font-mono">Credential ID: {certificate.credentialId}</span>}
+        </footer>
+      </div>
+    </main>
+  );
 }

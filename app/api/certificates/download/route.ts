@@ -5,18 +5,22 @@ import { createCertificatePDF } from "@/lib/certificatePdf";
 import { createServiceClient } from "@/lib/supabase/service";
 
 export async function GET(request: Request) {
-  const user = await getUser();
-  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-  const code = new URL(request.url).searchParams.get("code");
+  const requestUrl = new URL(request.url);
+  const isPreview = requestUrl.searchParams.get("preview") === "true";
+  const user = isPreview ? null : await getUser();
+  if (!user && !isPreview) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  const code = requestUrl.searchParams.get("code");
   if (!code) return NextResponse.json({ error: "Certificate code is required" }, { status: 400 });
   const supabase = createServiceClient();
-  const data = await getCertificateData(supabase, code, user.id);
+  const data = await getCertificateData(supabase, code, user?.id);
   if (!data) return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
 
-  const { data: certificate } = await supabase.from("certificates").select("download_count").eq("id", data.id).single();
-  await supabase.from("certificates").update({ download_count: (certificate?.download_count ?? 0) + 1, updated_at: new Date().toISOString() }).eq("id", data.id);
-  const origin = new URL(request.url).origin;
+  if (!isPreview) {
+    const { data: certificate } = await supabase.from("certificates").select("download_count").eq("id", data.id).single();
+    await supabase.from("certificates").update({ download_count: (certificate?.download_count ?? 0) + 1, updated_at: new Date().toISOString() }).eq("id", data.id);
+  }
+  const origin = requestUrl.origin;
   const pdf = await createCertificatePDF(data, `${origin}/certificate/verify/${encodeURIComponent(data.verificationCode)}`);
-  const disposition = new URL(request.url).searchParams.get("preview") === "true" ? "inline" : "attachment";
+  const disposition = isPreview ? "inline" : "attachment";
   return new Response(new Uint8Array(pdf), { headers: { "Content-Type": "application/pdf", "Content-Disposition": `${disposition}; filename="${data.credentialId}.pdf"`, "Cache-Control": "no-store" } });
 }

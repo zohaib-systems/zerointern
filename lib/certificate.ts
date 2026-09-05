@@ -20,7 +20,8 @@ export interface CertificateData {
 }
 
 export function generateCryptoHash(userId: string, trackId: string, timestamp: string) {
-  return crypto.createHash("sha256").update(userId + trackId + timestamp).digest("hex");
+  const canonicalTimestamp = new Date(timestamp).toISOString();
+  return crypto.createHash("sha256").update(userId + trackId + canonicalTimestamp).digest("hex");
 }
 
 export function generateVerificationCode() {
