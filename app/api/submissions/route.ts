@@ -1,3 +1,4 @@
+import { checkProjectAccess } from "@/lib/projectAccess";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,8 +11,10 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-    const { data: project } = await supabase.from("projects").select("id").eq("id", input.projectId).maybeSingle();
+    const { data: project } = await supabase.from("projects").select("id, track_id, difficulty_level").eq("id", input.projectId).maybeSingle();
     if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    const access = await checkProjectAccess(supabase, userData.user.id, project);
+    if (access) return NextResponse.json(access, { status: 403 });
 
     const { data: existing } = await supabase.from("submissions").select("id, status").eq("user_id", userData.user.id).eq("project_id", input.projectId).maybeSingle();
     if (existing && existing.status !== "REJECTED") return NextResponse.json({ error: "A submission is already under review or has been approved" }, { status: 409 });

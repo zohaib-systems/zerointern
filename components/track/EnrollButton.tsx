@@ -24,5 +24,5 @@ export default function EnrollButton({ trackId }: EnrollButtonProps) {
     finally { setLoading(false); }
   }
 
-  return <div><button type="button" onClick={enroll} disabled={loading} className="rounded-lg bg-cyan-500 px-5 py-3 font-semibold text-slate-950 disabled:opacity-60">{loading ? "Enrolling..." : "Enroll Now"}</button>{error && <p className="mt-2 text-sm text-rose-300" role="alert">{error}</p>}</div>;
+  return <div><button type="button" onClick={enroll} disabled={loading} className="rounded-lg bg-cyan-500 px-5 py-3 font-semibold text-slate-950 disabled:opacity-60">{loading ? "Enrolling..." : "Enroll Now"}</button>{error && <p className="mt-2 text-sm text-red-200" role="alert">{error}</p>}</div>;
 }

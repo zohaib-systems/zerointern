@@ -1,6 +1,6 @@
 import { loadEnvConfig } from "@next/env";
 import { createClient } from "@supabase/supabase-js";
-import { projectsData, tracksData } from "@/lib/seedData";
+import { advancedProjects, projectsData, tracksData } from "@/lib/seedData";
 
 loadEnvConfig(process.cwd());
 
@@ -35,7 +35,8 @@ async function seed() {
   const missingTrack = projectsData.find((project) => !trackIds.has(project.trackSlug));
   if (missingTrack) throw new Error(`Missing track for ${missingTrack.title}`);
 
-  for (const project of projectsData) {
+  const allProjects = [...projectsData, ...advancedProjects];
+  for (const project of allProjects) {
     const trackId = trackIds.get(project.trackSlug);
     if (!trackId) throw new Error(`Missing track ID for ${project.trackSlug}`);
 
@@ -47,6 +48,12 @@ async function seed() {
       brief: project.brief,
       resources: project.resources,
       concepts: project.concepts,
+      difficulty_level: project.difficultyLevel ?? "beginner",
+      platform_name: project.platformName ?? null,
+      estimated_hours: project.estimatedHours ?? null,
+      prerequisites: project.prerequisites ?? [],
+      skills_learned: project.skillsLearned ?? [],
+      real_world_value: project.realWorldValue ?? null,
       project_order: project.projectOrder,
     };
 
@@ -66,7 +73,7 @@ async function seed() {
     if (projectError) throw new Error(`Project seed failed for ${project.title}: ${projectError.message}`);
   }
 
-  console.log(`Seeded ${tracksData.length} tracks and ${projectsData.length} projects.`);
+  console.log(`Seeded ${tracksData.length} tracks and ${allProjects.length} projects.`);
 }
 
 seed().catch((error: unknown) => {

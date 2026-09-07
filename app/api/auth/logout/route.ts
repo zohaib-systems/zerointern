@@ -4,7 +4,7 @@ import { signOut } from "@/lib/auth";
 export async function POST(request: Request) {
   try {
     await signOut();
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/", request.url), 303);
   } catch {
     return NextResponse.json({ error: "Unable to sign out" }, { status: 500 });
   }

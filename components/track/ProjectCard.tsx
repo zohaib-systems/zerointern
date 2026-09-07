@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, CheckCircle2, Clock3, LockKeyhole, Zap } from "lucide-react";
 import type { Project } from "@/types";
 
 interface ProjectCardProps {
@@ -6,21 +7,52 @@ interface ProjectCardProps {
   status?: string;
   index?: number;
   href?: string;
+  isLocked?: boolean;
 }
 
-export default function ProjectCard({ project, status = "Not Started", index = project.projectOrder, href }: ProjectCardProps) {
-  const statusStyle = status === "Approved" ? "text-emerald-300 bg-emerald-400/10" : status === "Submitted" ? "text-amber-300 bg-amber-400/10" : "text-zinc-300 bg-white/10";
-  const content = (
-    <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:border-cyan-400/40">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium text-cyan-300">Project {index}</span>
-        <span className={`rounded-full px-2.5 py-1 text-xs ${statusStyle}`}>{status}</span>
+export default function ProjectCard({ project, status = "Not Started", index = project.projectOrder, href, isLocked = false }: ProjectCardProps) {
+  const approved = status === "Approved";
+  const advanced = project.difficultyLevel === "advanced";
+  const statusClass = approved ? "approved" : status === "Submitted" || isLocked ? "pending" : status === "Rejected" ? "rejected" : "neutral";
+  const action = approved ? "Review completed project" : status === "Rejected" ? "Update submission" : status === "Submitted" ? "View submission" : "Start project";
+
+  return (
+    <article className={`zi-project-card ${advanced ? "advanced" : "beginner"} ${isLocked ? "locked" : ""}`}>
+      <div className="zi-card-header">
+        <div className="zi-card-badges">
+          <span className={`zi-badge ${advanced ? "advanced" : "beginner"}`}>{project.difficultyLevel}</span>
+          <span className={`zi-badge ${statusClass}`}>
+            {approved && <CheckCircle2 size={13} aria-hidden="true" />}
+            {isLocked && <LockKeyhole size={13} aria-hidden="true" />}
+            {isLocked ? "Locked" : status}
+          </span>
+          <span className="zi-project-number">Project {index}</span>
+        </div>
+        {project.platformName && <p className="zi-platform">{project.platformName}</p>}
+        <h3 className="zi-card-title">{project.title}</h3>
       </div>
-      <h3 className="mt-4 text-xl font-semibold">{project.title}</h3>
-      <p className="mt-3 text-sm leading-6 text-zinc-400">{project.description}</p>
-      <div className="mt-4 flex flex-wrap gap-2">{project.concepts.map((concept) => <span key={concept} className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-zinc-300">{concept}</span>)}</div>
-      <p className="mt-4 text-sm text-zinc-500">{project.brief.slice(0, 100)}{project.brief.length > 100 ? "..." : ""}</p>
+      <div className="zi-card-body">
+        <p className="zi-card-description">{project.description}</p>
+        {project.estimatedHours != null && project.estimatedHours > 0 && (
+          <div className="zi-card-stats">
+            <span><Clock3 size={15} aria-hidden="true" />{Math.ceil(project.estimatedHours / 40)} weeks at 40h/wk</span>
+            <span><Zap size={15} aria-hidden="true" />{project.estimatedHours} hours</span>
+          </div>
+        )}
+        <div className="zi-concepts" aria-label="Key concepts">
+          {project.concepts.slice(0, 4).map((concept) => <span key={concept}>{concept}</span>)}
+          {project.concepts.length > 4 && <span>+{project.concepts.length - 4} more</span>}
+        </div>
+      </div>
+      <div className="zi-card-footer">
+        {isLocked ? (
+          <div className="zi-locked-message"><LockKeyhole size={16} aria-hidden="true" /><span>Complete beginner projects first</span></div>
+        ) : href ? (
+          <Link href={href} className={`zi-card-action ${approved ? "completed" : "primary"}`} aria-label={`${action}: ${project.title}`}>
+            {approved && <CheckCircle2 size={16} aria-hidden="true" />}{action}<ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        ) : <p className="zi-card-preview">Project brief available after enrollment</p>}
+      </div>
     </article>
   );
-  return href ? <Link href={href} className="block">{content}</Link> : content;
 }

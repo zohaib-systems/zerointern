@@ -1,0 +1,101 @@
+/* Track design tokens. Scoped class names avoid legacy brand utility overrides. */
+@theme {
+  --color-track-bg: #0f172a;
+  --color-track-card: #1e293b;
+  --color-track-hover: #334155;
+  --color-track-text: #f8fafc;
+  --color-track-secondary: #cbd5e1;
+  --color-track-tertiary: #94a3b8;
+  --color-track-beginner: #10b981;
+  --color-track-advanced: #ef4444;
+  --color-track-locked: #fbbf24;
+  --color-track-accent: #06b6d4;
+  --shadow-track-card: 0 10px 30px -10px rgb(0 0 0 / 30%);
+}
+
+.zi-track-page {
+  min-height: 100vh;
+  background: var(--color-track-bg);
+  color: var(--color-track-text);
+  font-family: var(--font-track-sans, 'Inter'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.zi-track-container { max-width: 1024px; margin: auto; padding: 48px 24px; }
+.zi-back-link { color: #38bdf8; font-size: 14px; }
+.zi-back-link:hover { color: #bae6fd; }
+.zi-track-header { display: grid; align-items: center; gap: 24px; margin-top: 32px; }
+.zi-eyebrow { color: #67e8f9; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .15em; }
+.zi-track-header h1 { margin-top: 12px; font-size: 36px; font-weight: 700; line-height: 1.25; letter-spacing: -.025em; }
+.zi-track-description { margin-top: 16px; color: var(--color-track-secondary); font-size: 14px; line-height: 1.75; }
+.zi-progress-card { border: 1px solid #475569; border-radius: 12px; padding: 24px; background: linear-gradient(135deg, #1e293b, #0f172a); box-shadow: var(--shadow-track-card); transition: border-color 200ms ease-out, box-shadow 200ms ease-out; }
+.zi-progress-card:hover { border-color: #64748b; box-shadow: 0 10px 30px -10px rgb(6 182 212 / 20%); }
+.zi-progress-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.zi-progress-header h2 { color: #cbd5e1; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.zi-progress-header > span { color: #67e8f9; font: 700 28px/1.25 var(--font-track-mono, 'JetBrains Mono'), Monaco, monospace; font-variant-numeric: tabular-nums; }
+.zi-progress-subtitle { margin: 8px 0 20px; color: #cbd5e1; font-size: 12px; }
+.zi-progress-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) 28px; align-items: center; gap: 10px; margin-top: 12px; color: #cbd5e1; font-size: 12px; }
+.zi-progress-row > span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.zi-progress-track { height: 8px; width: 100%; overflow: hidden; border-radius: 9999px; background: #334155; }
+.zi-progress-fill { height: 100%; border-radius: inherit; transition: width 300ms ease-out; }
+.zi-progress-fill.overall { background: linear-gradient(90deg, #06b6d4, #67e8f9); }
+.zi-progress-fill.beginner { background: linear-gradient(90deg, #10b981, #22d3ee); }
+.zi-progress-fill.advanced { background: linear-gradient(90deg, #ef4444, #f87171); }
+.zi-progress-milestone { margin-top: 16px; padding-top: 12px; border-top: 1px solid #334155; color: #fde68a; font-size: 12px; line-height: 1.5; }
+.zi-progress-milestone.unlocked { color: #d1fae5; }
+.zi-project-section { margin-top: 40px; }
+.zi-section-header { padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid #334155; }
+.zi-section-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.zi-section-title-row h2 { color: #f8fafc; font-size: 28px; font-weight: 700; line-height: 1.25; letter-spacing: -.02em; }
+.zi-section-indicator { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 12px rgb(16 185 129 / 40%); }
+.zi-section-header.advanced .zi-section-indicator { background: #ef4444; box-shadow: 0 0 12px rgb(239 68 68 / 40%); }
+.zi-section-count { border: 1px solid #475569; background: #1e293b; padding: 5px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #cbd5e1; }
+.zi-section-header > p { color: #cbd5e1; font-size: 14px; line-height: 1.75; margin-top: 10px; }
+.zi-section-lock { display: inline-flex; align-items: center; gap: 6px; color: #fde68a; font-size: 12px; }
+.zi-project-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+.zi-project-card { --card-accent: #10b981; display: flex; flex-direction: column; min-width: 0; height: 100%; overflow: hidden; position: relative; border: 1px solid #475569; border-radius: 12px; color: #f8fafc; background: linear-gradient(135deg, #1e293b, #0f172a); box-shadow: var(--shadow-track-card); transition: transform 200ms ease-out, border-color 200ms ease-out, box-shadow 200ms ease-out; }
+.zi-project-card.advanced { --card-accent: #ef4444; background: linear-gradient(135deg, #391b24, #171521); }
+.zi-project-card::before { content: ''; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, transparent, var(--card-accent), transparent); opacity: .5; }
+.zi-project-card:not(.locked):hover, .zi-project-card:focus-within { border-color: #64748b; transform: translateY(-2px); box-shadow: 0 0 30px -10px rgb(6 182 212 / 30%); }
+.zi-project-card.advanced:not(.locked):hover { box-shadow: 0 0 30px -10px rgb(239 68 68 / 30%); }
+.zi-project-card.locked { border-style: dashed; }
+.zi-card-header { padding: 20px; border-bottom: 1px solid #475569; background: rgb(255 255 255 / 2%); }
+.zi-card-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.zi-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border: 1px solid #475569; border-radius: 9999px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+.zi-badge.beginner, .zi-badge.approved { color: #d1fae5; background: #064e3b; border-color: #047857; }
+.zi-badge.advanced, .zi-badge.rejected { color: #fee2e2; background: #7f1d1d; border-color: #b91c1c; }
+.zi-badge.pending { color: #fef3c7; background: #78350f; border-color: #a16207; }
+.zi-badge.neutral { color: #f8fafc; background: #334155; }
+.zi-project-number { margin-left: auto; font-size: 12px; color: #cbd5e1; white-space: nowrap; }
+.zi-platform { margin-bottom: 6px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #cbd5e1; }
+.zi-card-title { font-size: 20px; font-weight: 700; line-height: 1.4; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.zi-card-body { flex-grow: 1; padding: 20px; }
+.zi-card-description { color: #cbd5e1; font-size: 14px; line-height: 1.75; margin-bottom: 16px; }
+.zi-card-stats { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px; margin-bottom: 16px; border: 1px solid #475569; border-radius: 8px; background: #0f172a; }
+.zi-card-stats > span { display: inline-flex; align-items: center; gap: 6px; color: #cbd5e1; font-size: 12px; }
+.zi-concepts { display: flex; flex-wrap: wrap; gap: 6px; }
+.zi-concepts > span { color: #cbd5e1; background: #0f172a; border: 1px solid #475569; border-radius: 6px; padding: 5px 9px; font-size: 12px; }
+.zi-card-footer { padding: 16px 20px; border-top: 1px solid #475569; }
+.zi-card-action, .zi-locked-message { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; font-weight: 600; line-height: 1.5; text-align: center; }
+.zi-card-action.primary { background: #22d3ee; color: #0f172a; box-shadow: 0 8px 16px -8px rgb(6 182 212 / 35%); transition: background 150ms ease-out; }
+.zi-card-action.primary:hover { background: #67e8f9; }
+.zi-card-action.completed { background: #064e3b; color: #d1fae5; border-color: #047857; }
+.zi-card-action.completed:hover { border-color: #6ee7b7; }
+.zi-locked-message { color: #fef3c7; background: #78350f; border-color: #a16207; cursor: not-allowed; }
+.zi-locked-message svg { flex-shrink: 0; }
+.zi-card-preview { color: #cbd5e1; text-align: center; font-size: 12px; }
+.zi-lock-notice { padding: 16px; margin-bottom: 24px; border: 1px solid #a16207; border-radius: 8px; background: #78350f; color: #fef3c7; font-size: 14px; line-height: 1.75; }
+.zi-track-page a:focus-visible, .zi-card-action:focus-visible { outline: 2px solid #67e8f9; outline-offset: 4px; }
+@media (min-width: 768px) {
+  .zi-track-header { grid-template-columns: minmax(0, 1fr) 320px; gap: 32px; }
+  .zi-project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .zi-track-container { padding: 32px 16px; }
+  .zi-track-header h1 { font-size: 30px; }
+  .zi-section-title-row h2 { font-size: 24px; }
+  .zi-card-header, .zi-card-body, .zi-card-footer { padding: 16px; }
+  .zi-project-grid { gap: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zi-project-card, .zi-progress-card, .zi-progress-fill, .zi-card-action { transition: none; }
+  .zi-project-card:not(.locked):hover, .zi-project-card:focus-within { transform: none; }
+}

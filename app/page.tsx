@@ -1,56 +1,77 @@
 import Link from "next/link";
-import Navbar from "@/components/common/Navbar";
+import { Code2, Database, LayoutDashboard, ArrowRight, ShieldCheck } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { mapTrack } from "@/lib/data";
+import TrackCard from "@/components/track/TrackCard";
+import styles from "./page.module.css";
 
-export default function HomePage() {
-  return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white">
-      <Navbar />
-      <section className="flex min-h-[calc(100vh-73px)] items-center justify-center px-6 py-12">
-      <div className="w-full max-w-5xl rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-xl space-y-6">
-            <div className="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-cyan-300">
-              ZeroIntern
-            </div>
-            <div className="space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-                Build real projects. Learn by shipping.
-              </h1>
-              <p className="text-lg text-zinc-300">
-                Join beginner-friendly technical tracks, submit projects, and earn certificates with a polished learning experience.
-              </p>
-            </div>
+const examples = [
+  { Icon: Code2, track: "Full Stack JavaScript", title: "Launch an e-commerce platform", tags: "React / Node.js / PostgreSQL" },
+  { Icon: Database, track: "Python Backend", title: "Build reliable payment systems", tags: "FastAPI / Transactions / APIs" },
+  { Icon: LayoutDashboard, track: "PHP & Laravel", title: "Create powerful admin dashboards", tags: "Laravel / Queues / Analytics" },
+];
+const steps = [
+  ["Choose a track", "Find your path in JavaScript, Python, or Laravel."],
+  ["Build real projects", "Start with four beginner projects, then unlock four advanced builds."],
+  ["Submit your work", "Share your repository and live application for review."],
+  ["Earn your credential", "Get a verifiable certificate when every project in your track is approved."],
+];
 
-            <div className="flex flex-wrap gap-4">
-              <Link href="/auth/signin" className="rounded-full bg-cyan-500 px-6 py-3 font-medium text-slate-950 transition hover:bg-cyan-400">
-                Sign In
-              </Link>
-              <Link
-                href="#tracks"
-                className="rounded-full border border-white/15 bg-white/5 px-6 py-3 font-medium text-white transition hover:bg-white/10"
-              >
-                Explore Tracks
-              </Link>
-            </div>
-          </div>
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("tracks").select("*, projects(id, title, difficulty_level, project_order)").order("title");
+  const tracks = data ?? [];
+  const totalProjects = tracks.reduce((sum, track) => sum + (track.projects?.length ?? 0), 0);
 
-          <div className="grid gap-4 rounded-2xl border border-white/10 bg-[#111827] p-6 md:grid-cols-2 lg:w-[420px]">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-sm text-zinc-400">Tracks</p>
-              <p className="mt-2 text-3xl font-bold">12</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-sm text-zinc-400">Projects</p>
-              <p className="mt-2 text-3xl font-bold">48</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 md:col-span-2">
-              <p className="text-sm text-zinc-400">Current focus</p>
-              <p className="mt-2 text-xl font-semibold">Full-stack product building</p>
-            </div>
-          </div>
+  return <main className={styles.landing}>
+    <section className={`zi-container ${styles.hero}`} aria-labelledby="hero-title">
+      <div>
+        <p className="zi-eyebrow">Free, project-based learning</p>
+        <h1 id="hero-title">Build real projects.<span className="zi-gradient-text">Show what you can do.</span></h1>
+        <p className={styles.lead}>Turn your development skills into working products. Follow a guided track, get your work reviewed, and earn a verifiable credential.</p>
+        <div className={styles.actions}>
+          <Link href="/explore" className="zi-btn zi-btn-primary">Explore tracks <ArrowRight size={18} aria-hidden="true" /></Link>
+          <Link href="#how-it-works" className={styles.textLink}>How it works <ArrowRight size={16} aria-hidden="true" /></Link>
         </div>
+        <dl className={styles.stats}>
+          {!error && <><div><dt>Guided projects</dt><dd>{totalProjects}</dd></div><div><dt>Learning tracks</dt><dd>{tracks.length}</dd></div></>}
+          <div><dt>Free to learn</dt><dd>100%</dd></div>
+        </dl>
       </div>
-      </section>
-    </main>
-  );
+      <div className={styles.showcase}>
+        <p className="zi-eyebrow">From learning to building</p>
+        <h2>Your next project starts here.</h2>
+        <p className={styles.showcaseIntro}>Practical builds. Skills you can put to work.</p>
+        <div className={styles.examples}>{examples.map(({ Icon, track, title, tags }) =>
+          <article className={styles.example} key={track}>
+            <div className={styles.exampleIcon}><Icon size={22} aria-hidden="true" /></div>
+            <div><p className={styles.exampleTrack}>{track}</p><h3>{title}</h3><p className={styles.tags}>{tags}</p></div>
+          </article>
+        )}</div>
+        <div className={styles.showcaseNote}><ShieldCheck size={18} aria-hidden="true" /><span>Build toward a verifiable credential</span></div>
+      </div>
+    </section>
+
+    <section id="tracks" className={styles.section} aria-labelledby="tracks-title">
+      <div className="zi-container">
+        <div className={styles.sectionHeading}><div><p className="zi-eyebrow">Find your focus</p><h2 id="tracks-title">Choose your learning path</h2><p>Build a foundation, then take on ambitious platform projects.</p></div><Link href="/explore" className={styles.textLink}>View all tracks <ArrowRight size={16} aria-hidden="true" /></Link></div>
+        {error || !tracks.length ? <p className={styles.emptyState} role="status">{error ? "Tracks are temporarily unavailable. Please try again shortly." : "New learning tracks are on the way. Check back soon."}</p> :
+          <div className={styles.trackGrid}>{tracks.map(row => <TrackCard key={row.id} track={mapTrack(row)} projectCount={row.projects.length} previewProjects={[...row.projects].sort((a, b) => a.project_order - b.project_order).filter(p => [1, 2, 5, 7].includes(p.project_order))} />)}</div>}
+      </div>
+    </section>
+
+    <section id="how-it-works" className={`${styles.section} ${styles.processSection}`} aria-labelledby="process-title">
+      <div className="zi-container">
+        <div className={styles.sectionHeading}><div><p className="zi-eyebrow">A clear way forward</p><h2 id="process-title">From your first build to verified work</h2><p>Make progress one project at a time, with a clear next step.</p></div></div>
+        <ol className={styles.steps}>{steps.map(([title, description], index) => <li key={title}><span className={styles.stepNumber} aria-hidden="true">0{index + 1}</span><h3>{title}</h3><p>{description}</p></li>)}</ol>
+      </div>
+    </section>
+
+    <section id="employers" className={`zi-container ${styles.employerSection}`} aria-labelledby="employers-title">
+      <div className={styles.employerPanel}>
+        <div><p className="zi-eyebrow">For employers</p><h2 id="employers-title">Real work.<br />Proof you can inspect.</h2><Link href="/explore" className="zi-btn zi-btn-secondary">Explore the curriculum <ArrowRight size={16} aria-hidden="true" /></Link></div>
+        <div className={styles.verification}><ShieldCheck size={32} aria-hidden="true" /><h3>Credentials backed by approved projects</h3><p>Every issued credential has a public verification page with its status and links to the learner&apos;s approved work.</p><p>Ask a candidate for their verification link to see what they&apos;ve built.</p></div>
+      </div>
+    </section>
+  </main>;
 }

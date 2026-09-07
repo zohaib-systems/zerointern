@@ -1,15 +1,15 @@
 interface ProgressBarProps {
   completed: number;
   total: number;
+  variant?: "overall" | "beginner" | "advanced";
+  label?: string;
 }
 
-export default function ProgressBar({ completed, total }: ProgressBarProps) {
-  const percentage = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
-  const color = percentage === 100 ? "bg-emerald-400" : percentage > 0 ? "bg-amber-400" : "bg-zinc-600";
-
+export default function ProgressBar({ completed, total, variant = "overall", label = "Approved projects" }: ProgressBarProps) {
+  const percentage = total > 0 ? Math.max(0, Math.min(100, Math.round((completed / total) * 100))) : 0;
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-white/10" aria-label={`${percentage}% complete`}>
-      <div className={`h-full ${color} transition-all`} style={{ width: `${percentage}%` }} />
+    <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage} className="zi-progress-track" aria-label={label} aria-valuetext={`${completed} of ${total} approved, ${percentage}% complete`}>
+      <div className={`zi-progress-fill ${variant}`} style={{ width: `${percentage}%` }} />
     </div>
   );
 }

@@ -19,7 +19,7 @@ export default function CopyFingerprintButton({ value }: { value: string }) {
     <button
       type="button"
       onClick={copyFingerprint}
-      className="min-h-11 rounded-md border border-[#0B7A53]/35 bg-white px-4 py-2 text-sm font-semibold text-[#065F46] transition hover:border-[#0B7A53] hover:bg-[#F4FAF7]"
+      className="zi-btn zi-btn-secondary"
       aria-label="Copy SHA-256 fingerprint"
     >
       {copied ? "Copied" : "Copy fingerprint"}

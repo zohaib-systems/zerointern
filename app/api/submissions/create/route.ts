@@ -1,3 +1,4 @@
+import { checkProjectAccess } from "@/lib/projectAccess";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -10,10 +11,11 @@ export async function POST(request: Request) {
 		const supabase = await createClient();
 		const { data: auth } = await supabase.auth.getUser();
 		if (!auth.user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-		const { data: project } = await supabase.from("projects").select("id, track_id").eq("id", parsed.data.projectId).maybeSingle();
+		const { data: project } = await supabase.from("projects").select("id, track_id, difficulty_level").eq("id", parsed.data.projectId).maybeSingle();
 		if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
-		const { data: enrollment } = await supabase.from("track_enrollments").select("id").eq("user_id", auth.user.id).eq("track_id", project.track_id).maybeSingle();
-		if (!enrollment) return NextResponse.json({ error: "Enroll in this track first" }, { status: 403 });
+    const access = await checkProjectAccess(supabase, auth.user.id, project);
+    if (access) return NextResponse.json(access, { status: 403 });
+
 		const { data: existing } = await supabase.from("submissions").select("id, status").eq("user_id", auth.user.id).eq("project_id", parsed.data.projectId).maybeSingle();
 		if (existing && existing.status !== "REJECTED") return NextResponse.json({ error: "A submission is already under review or has been approved" }, { status: 409 });
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
+import { getOnboardingProfile } from "@/lib/onboarding-server";
 
 function getAdminClient() {
   return createClient(
@@ -63,7 +64,8 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const profile = await getOnboardingProfile(supabase, user.id);
+    return NextResponse.redirect(new URL(profile.onboarding_completed && profile.active_track_id ? "/dashboard" : "/onboarding", request.url));
   } catch {
     return NextResponse.redirect(
       new URL("/auth/callback?error=Authentication failed", request.url),

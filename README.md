@@ -52,13 +52,15 @@ ZeroIntern is a project-based learning platform where developers build productio
 
 3. Configure Google under Supabase **Authentication > Providers > Google**. Use `http://localhost:3000/api/auth/callback` as the local callback URL.
 
-4. Apply `supabase/20260902_add_project_problem.sql` in the Supabase SQL editor.
+4. Apply `supabase/20260902_add_project_problem.sql`, `supabase/20260906_add_advanced_project_metadata.sql`, and `supabase/20260907_add_onboarding.sql` in order in the Supabase SQL editor. Existing databases should apply only the migrations not already run; see `supabase/README.md`. Apply the onboarding migration before deploying code that uses the quiz.
 
 5. Seed the initial tracks and projects:
 
 	```bash
 	npx tsx scripts/seed.ts
 	```
+
+	The seed is idempotent and adds 12 advanced platform projects across the existing JavaScript, Python, and Laravel tracks. Existing projects remain available as the foundation projects.
 
 6. Start the app:
 

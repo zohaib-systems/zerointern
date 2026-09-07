@@ -11,7 +11,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (!data) return NextResponse.json({ error: "Track not found" }, { status: 404 });
     const projectRows = Array.isArray(data.projects) ? (data.projects as unknown[]) : [];
     const projects = projectRows.map((project) => mapProject(project as Record<string, unknown>)).sort((a, b) => a.projectOrder - b.projectOrder);
-    return NextResponse.json({ data: { track: mapTrack(data as unknown as Record<string, unknown>), projects } });
+    const { data: auth } = await supabase.auth.getUser();
+    let completedProjects: string[] = [];
+    if (auth.user && projects.length) {
+      const { data: submissions, error: progressError } = await supabase.from("submissions").select("project_id").eq("user_id", auth.user.id).eq("status", "APPROVED").in("project_id", projects.map((project) => project.id));
+      if (progressError) throw new Error("Unable to load progress");
+      completedProjects = [...new Set((submissions ?? []).map((submission) => String(submission.project_id)))];
+    }
+    projects.sort((a, b) => Number(a.difficultyLevel === "advanced") - Number(b.difficultyLevel === "advanced") || a.projectOrder - b.projectOrder);
+    return NextResponse.json({ data: { track: mapTrack(data as unknown as Record<string, unknown>), projects, userProgress: { completedProjects } } });
   } catch {
     return NextResponse.json({ error: "Unable to load track" }, { status: 500 });
   }

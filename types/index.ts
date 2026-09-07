@@ -26,6 +26,12 @@ export interface Project {
   brief: string;
   resources: Array<{ title: string; url: string; type: string }>;
   concepts: string[];
+  difficultyLevel: "beginner" | "intermediate" | "advanced";
+  platformName: string | null;
+  estimatedHours: number | null;
+  prerequisites: string[];
+  skillsLearned: string[];
+  realWorldValue: string | null;
   projectOrder: number;
   createdAt: string;
   updatedAt: string;

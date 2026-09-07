@@ -39,7 +39,7 @@ export async function createCertificateIfEarned(supabase: SupabaseClient, userId
   if (projectIds.length < 4) return null;
 
   const { count } = await supabase.from("submissions").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("status", "APPROVED").in("project_id", projectIds);
-  if ((count ?? 0) < 4) return null;
+  if ((count ?? 0) < projectIds.length) return null;
 
   const { data: existing } = await supabase.from("certificates").select("id").eq("user_id", userId).eq("track_id", trackId).maybeSingle();
   if (existing) return existing;
