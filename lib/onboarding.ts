@@ -4,6 +4,7 @@ export const quizSchema = z.object({
   experience_level: z.enum(["beginner", "intermediate", "advanced"]),
   goal: z.enum(["job", "skills", "portfolio", "current-job"]),
   timeline: z.enum(["6weeks", "12weeks", "24+weeks"]),
+  technology_preference: z.enum(["javascript", "python", "php", "not-sure"]),
 });
 export const trackSelectionSchema = z.object({ track_id: z.uuid() });
 export type QuizAnswers = z.infer<typeof quizSchema>;
@@ -20,6 +21,9 @@ export type Recommendation = {
 export const trackSlugs = ["full-stack-js", "python-backend", "php-laravel"] as const;
 
 export function recommendedSlug(answers: QuizAnswers): typeof trackSlugs[number] {
+  if (answers.technology_preference === "javascript") return "full-stack-js";
+  if (answers.technology_preference === "python") return "python-backend";
+  if (answers.technology_preference === "php") return "php-laravel";
   if (answers.timeline === "6weeks") return "full-stack-js";
   if (answers.timeline === "24+weeks" || answers.experience_level === "advanced") return "python-backend";
   if (answers.goal === "skills") return answers.experience_level === "beginner" ? "php-laravel" : "python-backend";
@@ -38,7 +42,7 @@ export function getRecommendation(answers: QuizAnswers, tracks: TrackChoice[]): 
   }[slug];
   return {
     recommendedTrackId: track.id, recommendedTrackName: track.title, ...reasons,
-    reason: answers.timeline === "6weeks" ? "A focused JavaScript path for your intensive schedule" : answers.timeline === "24+weeks" ? "Explore backend engineering at a flexible pace" : reasons.reason,
+    reason: answers.technology_preference !== "not-sure" ? `Matches your technology preference. ${reasons.reason}.` : answers.timeline === "6weeks" ? "A focused JavaScript path for your intensive schedule" : answers.timeline === "24+weeks" ? "Explore backend engineering at a flexible pace" : reasons.reason,
     estimatedWeeks: answers.timeline === "6weeks" ? 6 : answers.timeline === "24+weeks" ? 24 : slug === "php-laravel" ? 10 : 12,
     estimatedHoursPerWeek: answers.timeline === "6weeks" ? 40 : answers.timeline === "12weeks" ? 25 : 12,
     projects: track.projects,

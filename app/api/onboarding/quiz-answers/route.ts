@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Sign in to save your answers" }, { status: 401 });
     const parsed = quizSchema.safeParse(await request.json().catch(() => null));
-    if (!parsed.success) return NextResponse.json({ error: "Please answer all three questions with a valid option" }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: "Please answer all four questions with a valid option" }, { status: 400 });
     const recommendation = getRecommendation(parsed.data, await getTrackChoices(supabase));
     const now = new Date().toISOString();
     const { error } = await supabase.from("onboarding_responses").upsert({

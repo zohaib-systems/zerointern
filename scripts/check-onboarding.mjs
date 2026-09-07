@@ -31,25 +31,29 @@ let combinations = 0;
 for (const experience_level of Object.keys(expectedModerate)) {
   for (const goal of ["job", "skills", "portfolio", "current-job"]) {
     for (const timeline of ["6weeks", "12weeks", "24+weeks"]) {
-      const expected = tracks[timeline === "6weeks" ? 0 : timeline === "24+weeks" ? 1 : expectedModerate[experience_level][goal]];
-      const result = logic.getRecommendation({ experience_level, goal, timeline }, tracks);
+      for (const technology_preference of ["javascript", "python", "php", "not-sure"]) {
+      const preferredIndex = { javascript: 0, python: 1, php: 2 }[technology_preference];
+      const expected = tracks[preferredIndex ?? (timeline === "6weeks" ? 0 : timeline === "24+weeks" ? 1 : expectedModerate[experience_level][goal])];
+      const result = logic.getRecommendation({ experience_level, goal, timeline, technology_preference }, tracks);
       assert.equal(result.recommendedTrackId, expected.id);
       assert.equal(result.recommendedTrackName, expected.title);
       assert.equal(result.projects, expected.projects, "Project count must come from the database");
       assert.equal(result.estimatedHoursPerWeek, timeline === "6weeks" ? 40 : timeline === "12weeks" ? 25 : 12);
       if (timeline === "24+weeks") assert.ok(result.estimatedWeeks >= 24);
+      if (technology_preference !== "not-sure") assert.match(result.reason, /Matches your technology preference/);
       combinations++;
+      }
     }
   }
 }
-const answers = { experience_level: "intermediate", goal: "job", timeline: "12weeks" };
+const answers = { experience_level: "intermediate", goal: "job", timeline: "12weeks", technology_preference: "not-sure" };
 assert.throws(() => logic.getRecommendation(answers, []), /unavailable/);
-for (const value of [null, {}, { ...answers, timeline: "soon" }, { ...answers, experience_level: "expert" }, { ...answers, goal: "php" }]) assert.equal(logic.quizSchema.safeParse(value).success, false);
+for (const value of [null, {}, { ...answers, timeline: "soon" }, { ...answers, experience_level: "expert" }, { ...answers, goal: "php" }, { ...answers, technology_preference: "ruby" }, { ...answers, technology_preference: undefined }]) assert.equal(logic.quizSchema.safeParse(value).success, false);
 assert.equal(logic.trackSelectionSchema.safeParse({ track_id: "track-1-js" }).success, false);
 
-function setup({ authenticated = true, databaseError = null, rpcError = null } = {}) {
+function setup({ authenticated = true, databaseError = null, rpcError = null, savedResponse = null } = {}) {
   const calls = [];
-  let saved = null;
+  let saved = savedResponse;
   const query = {
     select() { return this; }, eq(column, value) { calls.push(["eq", column, value]); return this; },
     in() { return this; },
@@ -103,6 +107,15 @@ assert.deepEqual(restored.body.recommendation, response.body.recommendation);
 assert.deepEqual(restored.body.userAnswers, answers);
 assert.equal(restored.body.quizCompleted, true);
 assert.equal(restored.headers["Cache-Control"], "private, no-store");
+const preferredAnswers = { ...answers, timeline: "6weeks", technology_preference: "python" };
+assert.equal((await test.save(request(preferredAnswers))).status, 200);
+const preferredRestored = (await test.get()).body;
+assert.deepEqual(preferredRestored.userAnswers, preferredAnswers);
+assert.equal(preferredRestored.recommendation.recommendedTrackId, tracks[1].id);
+const legacyAnswers = { experience_level: "intermediate", goal: "job", timeline: "12weeks", quiz_completed: true };
+const legacyRestored = (await setup({ savedResponse: legacyAnswers }).get()).body;
+assert.equal(legacyRestored.userAnswers.technology_preference, "not-sure");
+assert.equal(legacyRestored.recommendation.recommendedTrackId, tracks[0].id);
 assert.ok(test.calls.some(call => call[0] === "eq" && call[1] === "user_id" && call[2] === "signed-in-user"));
 assert.equal((await setup({ databaseError: { code: "failure" } }).save(request(answers))).status, 500);
 assert.equal((await setup({ databaseError: { code: "failure" } }).get()).status, 500);

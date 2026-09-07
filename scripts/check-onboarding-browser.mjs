@@ -72,6 +72,16 @@ try {
     await page.getByRole("button", { name: "Next" }).click();
     assert.equal(await page.getByRole("radio", { name: "Job/Freelance" }).isChecked(), true);
     await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("heading", { name: "Which technology would you like to learn?" }).waitFor();
+    assert.equal(await page.getByRole("button", { name: "Next" }).isDisabled(), true);
+    await page.getByRole("radio", { name: "Python" }).check();
+    await page.screenshot({ path: path.join(temp, `technology-${width}.png`), fullPage: true });
+    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Back" }).click();
+    assert.equal(await page.getByRole("radio", { name: "Python" }).isChecked(), true);
+    await page.getByRole("radio", { name: "Not sure" }).check();
+    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("progressbar", { name: "Question 4 of 4" }).waitFor();
     assert.equal(await page.getByRole("button", { name: "See my recommendation" }).isDisabled(), true);
     await page.getByRole("radio", { name: "12 weeks", exact: false }).check();
     await page.screenshot({ path: path.join(temp, `question-${width}.png`), fullPage: true });
@@ -82,7 +92,7 @@ try {
       await page.getByRole("button", { name: "See my recommendation" }).click();
     }
     await page.getByRole("heading", { name: "A track for your goals" }).waitFor();
-    assert.deepEqual(savedAnswers, { experience_level: "intermediate", goal: "job", timeline: "12weeks" });
+    assert.deepEqual(savedAnswers, { experience_level: "intermediate", goal: "job", timeline: "12weeks", technology_preference: "not-sure" });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: path.join(temp, `results-${width}.png`), fullPage: true });
     await page.getByRole("button", { name: "Start Full Stack JavaScript" }).click();
@@ -102,7 +112,7 @@ try {
   await page.waitForFunction(() => window.__navigation === "/dashboard");
   assert.equal(selectedTrack, tracks[1].id);
   assert.deepEqual(errors, []);
-  console.log("Passed browser checks at 375, 768, and 1280px: welcome, three questions, Back, disabled Next, retry, results, manual selection, restored results, switching, and no horizontal overflow.");
+  console.log("Passed browser checks at 375, 768, and 1280px: welcome, four questions, technology selection, Back, disabled Next, retry, results, manual selection, restored results, switching, and no horizontal overflow.");
   console.log("Screenshots: .next/onboarding-browser-check/");
 } finally {
   await browser?.close();

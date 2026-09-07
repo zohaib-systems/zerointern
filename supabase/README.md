@@ -2,6 +2,23 @@
 
 ## Smart onboarding
 
+### Technology preference follow-up
+
+If the original onboarding migration has already been applied, run only
+`20260907_add_technology_preference.sql` next, before deploying the four-question
+quiz. It adds `technology_preference` with a default of `not-sure` for older
+responses. Existing active tracks, completion status, and progress are unchanged.
+Fresh databases should apply it immediately after `20260907_add_onboarding.sql`.
+
+The questions are experience, goal, technology preference, and learning pace.
+An explicit JavaScript, Python, or PHP choice determines the recommended track
+regardless of experience, goal, or pace. `not-sure` uses the original rules below.
+Pace controls the suggested weeks and weekly hours, not a guaranteed completion
+date. API submissions require all four answers; existing saved answers default
+to `not-sure` when read.
+
+### Initial onboarding setup
+
 Before deploying onboarding, run `20260907_add_onboarding.sql` in the Supabase
 SQL Editor for the existing ZeroIntern project. This repository uses standalone
 SQL files, not a configured Supabase CLI migration history; `supabase migration up`
@@ -16,7 +33,7 @@ submissions, and certificates remain intact. Existing users without onboarding
 state will choose a track on their next dashboard visit.
 
 Track IDs are resolved from the existing `full-stack-js`, `python-backend`, and
-`php-laravel` slugs. Seed these tracks before using the quiz. The 6-week and
+`php-laravel` slugs. Seed these tracks before using the quiz. For `not-sure`, the 6-week and
 24+-week choices override the experience/goal matrix; 12 weeks uses that matrix.
 Displayed times are estimates, and project counts come from the database.
 

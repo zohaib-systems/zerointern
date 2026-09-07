@@ -13,9 +13,9 @@ export async function getTrackChoices(supabase: Client): Promise<TrackChoice[]> 
   return (data ?? []).map(track => ({ id: track.id, slug: track.slug, title: track.title, description: track.description, projects: track.projects?.length ?? 0 }));
 }
 export async function getSavedRecommendation(supabase: Client, userId: string, tracks: TrackChoice[]) {
-  const { data, error } = await supabase.from("onboarding_responses").select("experience_level, goal, timeline, quiz_completed").eq("user_id", userId).maybeSingle();
+  const { data, error } = await supabase.from("onboarding_responses").select("experience_level, goal, timeline, technology_preference, quiz_completed").eq("user_id", userId).maybeSingle();
   if (error) throw new Error("Unable to load your saved answers. Please try again.");
-  const parsed = quizSchema.safeParse(data);
+  const parsed = quizSchema.safeParse(data ? { ...data, technology_preference: data.technology_preference ?? "not-sure" } : null);
   return {
     quizCompleted: Boolean(data?.quiz_completed && parsed.success),
     userAnswers: parsed.success ? parsed.data : null,

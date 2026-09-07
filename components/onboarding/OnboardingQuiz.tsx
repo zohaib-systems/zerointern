@@ -29,7 +29,7 @@ export default function OnboardingQuiz({ user, tracks, initialAnswers, initialRe
   async function submit() {
     if (pending.current) return;
     const parsed = quizSchema.safeParse(answers);
-    if (!parsed.success) { setError("Please answer all three questions."); return; }
+    if (!parsed.success) { setError("Please answer all four questions."); return; }
     pending.current = true; setLoading(true); setError("");
     try {
       const response = await fetch("/api/onboarding/quiz-answers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(parsed.data) });
@@ -53,8 +53,8 @@ export default function OnboardingQuiz({ user, tracks, initialAnswers, initialRe
   return <main className={styles.page}>
     <header className={styles.header}><Link href="/" className="zi-brand"><Image src="/icon.png" alt="" width={32} height={32} /><span>ZeroIntern</span></Link>{switching && <Link href="/dashboard" className={styles.link}>Back to dashboard</Link>}</header>
     <div ref={screen} tabIndex={-1} className={styles.screen} aria-busy={loading}>
-      {stage === "welcome" && <WelcomeScreen user={user} onStart={start} onSkip={skip} />}
-      {stage === "question" && <QuestionScreen key={question.id} question={question} currentNumber={questionIndex + 1} selected={answers[question.id]} loading={loading} onSelect={value => setAnswers({ ...answers, [question.id]: value })} onNext={() => { setError(""); if (questionIndex < 2) setQuestionIndex(questionIndex + 1); else void submit(); }} onBack={() => { setError(""); if (questionIndex) setQuestionIndex(questionIndex - 1); else setStage("welcome"); }} onSkip={skip} />}
+      {stage === "welcome" && <WelcomeScreen questionCount={questions.length} user={user} onStart={start} onSkip={skip} />}
+      {stage === "question" && <QuestionScreen key={question.id} question={question} currentNumber={questionIndex + 1} totalQuestions={questions.length} selected={answers[question.id]} loading={loading} onSelect={value => setAnswers({ ...answers, [question.id]: value })} onNext={() => { setError(""); if (questionIndex < questions.length - 1) setQuestionIndex(questionIndex + 1); else void submit(); }} onBack={() => { setError(""); if (questionIndex) setQuestionIndex(questionIndex - 1); else setStage("welcome"); }} onSkip={skip} />}
       {stage === "results" && <ResultsScreen recommendation={recommendation} tracks={tracks} loading={loading} switching={switching} activeTrackId={activeTrackId} onSelectTrack={selectTrack} onRetake={start} />}
       {error && <div className={styles.error} role="alert">{error} <Link href="/auth/signin">Sign in again</Link></div>}
       <p className={styles.status} role="status">{loading ? stage === "results" ? "Saving your track…" : "Preparing your recommendation…" : ""}</p>
