@@ -27,7 +27,7 @@ export async function getCertificateData(supabase: SupabaseClient, code: string,
   const { data: projects } = projectIds.length
     ? await supabase
         .from("projects")
-        .select("id, title, project_order")
+        .select("id, title, project_order, difficulty_level")
         .eq("track_id", certificate.track_id)
         .in("id", projectIds)
         .order("project_order", { ascending: true })
@@ -61,6 +61,9 @@ export async function getCertificateData(supabase: SupabaseClient, code: string,
     issuedAt: certificate.issued_at,
     cryptoHash: certificate.crypto_hash,
     verificationCode: certificate.verification_code,
+    sealLevel: projects.filter((project) => project.difficulty_level === "advanced").length >= 4
+      ? "advanced"
+      : "standard",
     status,
     integrityValid,
     revokedAt,

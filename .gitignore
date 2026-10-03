@@ -46,6 +46,14 @@ client_secret_320199076080-qjasamjr17i67i5g4b0l2fuqfr44fa9i.apps.googleuserconte
 
 ZeroIntern-ZI-8C66AB.pdf
 
+# Local certificate references and review artifacts
+/.codex/pdf-review/
+/ZI-*.pdf
+/image.png
+/certificate-review-preview.png
+/Advanced Green Gold Badge Logo.png
+/Zero Intern Advanced Project Badge.png
+
 zerointern-ai-coordination.md
 zerointern-constitution (1).md
 zerointern-phase1-workflow (1).md

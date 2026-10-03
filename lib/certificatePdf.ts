@@ -386,11 +386,12 @@ export async function createCertificatePDF(
     // PREMIUM ZERO INTERN CREDENTIAL SEAL
     // =========================================================
 
-    const sealPath = path.join(process.cwd(), "public", "certificate-seal.png");
-    const sealSize = 86;
+    const isAdvanced = data.sealLevel === "advanced";
+    const sealPath = path.join(process.cwd(), "public", isAdvanced ? "certificate-seal-advanced.png" : "certificate-seal.png");
+    const sealSize = isAdvanced ? 100 : 86;
 
     if (fs.existsSync(sealPath)) {
-      document.image(sealPath, 43, 309, {
+      document.image(sealPath, isAdvanced ? 36 : 43, isAdvanced ? 302 : 309, {
         width: sealSize,
         height: sealSize,
         fit: [sealSize, sealSize],

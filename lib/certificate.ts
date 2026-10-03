@@ -17,6 +17,7 @@ export interface CertificateData {
   cryptoHash: string;
   verificationCode: string;
   projects: CertificateProject[];
+  sealLevel?: "standard" | "advanced";
 }
 
 export function generateCryptoHash(userId: string, trackId: string, timestamp: string) {
