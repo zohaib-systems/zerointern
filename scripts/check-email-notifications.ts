@@ -10,13 +10,24 @@ const base: EmailEvent = {
 };
 for (const kind of ["approved", "rejected", "certificate"] as const) {
   const mail = emailTemplate({ ...base, kind, path: kind === "certificate" ? "/dashboard/certificates" : base.path });
-  assert.ok(mail.subject.startsWith("ZeroIntern:"));
+  assert.ok(mail.subject.startsWith(kind === 'rejected' ? 'Feedback on your' : 'Congratulations'));
+  assert.ok(mail.text.includes('Hi there,'));
+  assert.equal(mail.html.includes('Reviewer feedback'), kind === 'rejected');
   assert.ok(!mail.html.includes("<script>"));
   assert.ok(!mail.html.includes("<img"));
   assert.ok(mail.html.includes("&lt;script&gt;"));
-  assert.ok(mail.text.includes(base.feedback!));
+  assert.equal(mail.text.includes(base.feedback!), kind === 'rejected');
+  if (kind === 'rejected') assert.ok(mail.text.includes('Good luck with your next submission'));
   assert.ok(mail.text.includes("https://zerointern.vercel.app/dashboard/settings"));
 }
+const personalized = emailTemplate(base, 'Alex <img src=x>');
+assert.ok(personalized.text.includes('Hi Alex <img src=x>,'));
+assert.ok(personalized.html.includes('Hi Alex &lt;img src=x&gt;,'));
+assert.ok(!personalized.html.includes('<img'));
+assert.ok(emailTemplate(base, '  ').text.includes('Hi there,'));
+assert.ok(!emailTemplate(base, 'Alex\r\nBcc: someone').subject.includes('\n'));
+assert.ok(emailTemplate({ ...base, kind: 'rejected', feedback: null }).text.includes('review the requested changes'));
+assert.ok(emailTemplate({ ...base, kind: 'rejected' }).html.includes('&lt;img src=x onerror=alert(1)&gt;<br>Try again &amp; resubmit.'));
 for (const path of ["//evil.example", "https://evil.example", '/dashboard/projects/abc" onclick="alert(1)', "/dashboard/certificates?redirect=evil"]) {
   assert.throws(() => emailTemplate({ ...base, path }));
 }

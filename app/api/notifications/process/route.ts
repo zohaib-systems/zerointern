@@ -42,13 +42,19 @@ export async function POST(request: Request) {
       await finish({ status: "skipped" });
       return NextResponse.json({ processed: 1 });
     }
+    const { data: profile, error: profileError } = await supabase.from("users").select("name").eq("id", event.user_id).maybeSingle();
+    if (profileError) throw new Error("Recipient name lookup failed");
+    const metadataName = user.user_metadata?.full_name ?? user.user_metadata?.name;
+    const recipientName = typeof profile?.name === "string" && profile.name.trim()
+      ? profile.name
+      : typeof metadataName === "string" ? metadataName : "there";
     const transport = createEmailTransport();
     try {
       await transport.sendMail({
         from: { name: "ZeroIntern", address: process.env.GMAIL_USER! },
         to: user.email,
         messageId: `<${event.id}@zerointern.vercel.app>`,
-        ...emailTemplate(event),
+        ...emailTemplate(event, recipientName),
       });
     } catch (sendError) {
       await finish(deliveryFailure(sendError, event.attempts));
