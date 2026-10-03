@@ -35,19 +35,29 @@ export function verifyCryptoHash(userId: string, trackId: string, timestamp: str
 }
 
 export async function createCertificateIfEarned(supabase: SupabaseClient, userId: string, trackId: string) {
-  const { data: projects } = await supabase.from("projects").select("id").eq("track_id", trackId);
+  const { data: projects, error: projectsError } = await supabase.from("projects").select("id").eq("track_id", trackId).eq("difficulty_level", "beginner");
+  if (projectsError) throw projectsError;
   const projectIds = (projects ?? []).map((project) => project.id);
   if (projectIds.length < 4) return null;
 
-  const { count } = await supabase.from("submissions").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("status", "APPROVED").in("project_id", projectIds);
-  if ((count ?? 0) < projectIds.length) return null;
+  const { data: approved, error: approvalsError } = await supabase.from("submissions").select("project_id").eq("user_id", userId).eq("status", "APPROVED").in("project_id", projectIds);
+  if (approvalsError) throw approvalsError;
+  if (new Set((approved ?? []).map((submission) => submission.project_id)).size < 4) return null;
 
-  const { data: existing } = await supabase.from("certificates").select("id").eq("user_id", userId).eq("track_id", trackId).maybeSingle();
+  const existingQuery = () => supabase.from("certificates").select("id").eq("user_id", userId).eq("track_id", trackId).maybeSingle();
+  const { data: existing, error: existingError } = await existingQuery();
+  if (existingError) throw existingError;
   if (existing) return existing;
 
   const issuedAt = new Date().toISOString();
   const certificate = { user_id: userId, track_id: trackId, issued_at: issuedAt, crypto_hash: generateCryptoHash(userId, trackId, issuedAt), verification_code: generateVerificationCode() };
   const { data, error } = await supabase.from("certificates").insert(certificate).select("id").single();
+  // Concurrent approvals may both qualify; the user/track unique key keeps one credential.
+  if (error?.code === "23505") {
+    const { data: concurrent, error: concurrentError } = await existingQuery();
+    if (concurrentError) throw concurrentError;
+    if (concurrent) return concurrent;
+  }
   if (error) throw error;
   return data;
 }

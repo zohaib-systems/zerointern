@@ -14,7 +14,7 @@ const steps = [
   ["Choose a track", "Find your path in JavaScript, Python, or Laravel."],
   ["Build real projects", "Start with four beginner projects, then unlock four advanced builds."],
   ["Submit your work", "Share your repository and live application for review."],
-  ["Earn your credential", "Get a verifiable certificate when every project in your track is approved."],
+  ["Earn your credential", "Get a verifiable certificate when four beginner projects in your track are approved."],
 ];
 
 export default async function HomePage() {

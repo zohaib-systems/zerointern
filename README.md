@@ -1,149 +1,106 @@
 # ZeroIntern
 
-ZeroIntern is a project-based learning platform where developers build production-style projects, submit their work for review, and earn verifiable certificates after completing a track.
+ZeroIntern is a project-based learning platform: learners choose a track, submit practical projects for review, and receive verifiable certificates. Production: https://zerointern.vercel.app.
 
-## What It Includes
+## Start here
 
-- Google OAuth authentication through Supabase
-- Guided tracks with four projects per track
-- Track enrollment and project progress tracking
-- Repository and live URL submissions
-- Admin approval and rejection workflow with feedback
-- Re-submission flow for rejected projects
-- Automatic certificate creation after four approvals in a track
-- SHA-256 certificate integrity hashes
-- PDF certificate generation with QR verification
-- Public, shareable certificate verification pages
-- Responsive, keyboard-accessible interface
+- [AGENTS.md](AGENTS.md): instructions for every coding agent.
+- [Architecture](docs/ARCHITECTURE.md): application flows and source locations.
+- [Decisions](docs/DECISIONS.md): constraints and reasons behind product choices.
+- [Status](docs/STATUS.md): implementation, validation, migration, and deployment evidence.
+- [Reusable AI prompt](prompt.md): paste into a new AI session and add your task.
 
-## Tech Stack
+## Stack and features
 
-- Next.js 16 App Router, React 19, and TypeScript
-- Tailwind CSS
-- Supabase Auth and PostgreSQL
-- PDFKit and QRCode
-- Zod and React Hook Form
+Next.js 16.3.4 App Router, React 19, TypeScript, Tailwind CSS, Supabase Auth/PostgreSQL, PDFKit, QRCode, and Nodemailer. The lockfile is authoritative for installed versions.
 
-## Requirements
+- Google sign-in through Supabase and a separate admin session.
+- Onboarding quiz, recommended/manual track selection, and track switching.
+- JavaScript, Python, and Laravel tracks, each seeded with four beginner and four advanced projects.
+- Enrollment, prerequisite checks, submission review, and resubmission with feedback.
+- Certificate PDFs, public verification, and an advanced seal after four approved advanced projects in the same track.
+- Opt-in approval, rejection, and certificate emails with personalized greetings.
+- Dashboard announcement bell, unread/read state, and admin announcement publishing.
 
-- Node.js 20 or newer
-- npm
-- A Supabase project
-- A Google OAuth application configured in Supabase
+## Local setup
 
-## Local Setup
+1. Use Node.js 20.9 or newer and npm; check the installed Next.js package requirements before changing Node versions.
+2. Run `npm ci` to install dependencies from the lockfile.
+3. Create a private `.env.local` with the variable names below. Obtain values through the configured providers; never commit or print them.
+4. Configure Google in Supabase Authentication > Providers > Google. Google's authorized callback is the Supabase `/auth/v1/callback`; the application's local redirect is `http://localhost:3000/api/auth/callback`. Add application redirects to Supabase Authentication URL Configuration.
+5. Apply the applicable SQL files in the order below. Existing databases should apply only missing changes after inspecting their schema.
+6. Run `npx tsx scripts/seed.ts` only against the intended database. Seeding writes tracks and projects; it is not a read-only check.
+7. Run `npm run dev`, then open http://localhost:3000.
 
-1. Install dependencies:
+### Environment variable names
 
-	```bash
-	npm install
-	```
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL; browser and server |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public client key; access controlled by RLS |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only privileged database operations |
+| `NEXTAUTH_SECRET` | Existing custom admin JWT signing secret; not a NextAuth migration |
+| `GMAIL_USER` | Optional server-only notification sender |
+| `GMAIL_APP_PASSWORD` | Optional server-only Gmail app password |
+| `EMAIL_WORKER_SECRET` | Optional server-only authorization for the email worker |
 
-2. Create `.env.local` in the project root:
+Google OAuth client credentials are configured in Supabase, not read from application environment variables. Never remove integration-managed variables without verifying ownership and usage.
 
-	```env
-	NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-	NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-	SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-	NEXTAUTH_SECRET=your-long-random-secret
-	```
+### SQL order
 
-	Never expose `SUPABASE_SERVICE_ROLE_KEY` to browser code or commit `.env.local`.
+This repository uses standalone SQL files, not configured Supabase CLI migration history. Apply them through the Supabase SQL Editor; `supabase migration up` does not automatically apply this layout.
 
-3. Configure Google under Supabase **Authentication > Providers > Google**. Use `http://localhost:3000/api/auth/callback` as the local callback URL.
+1. `supabase/20260902_add_project_problem.sql` - base schema.
+2. `supabase/20260906_add_advanced_project_metadata.sql` - difficulty and project metadata.
+3. `supabase/20260907_add_onboarding.sql` - onboarding state and track selection.
+4. `supabase/20260907_add_technology_preference.sql` - fourth quiz question.
+5. `supabase/20260913_add_email_notifications.sql` - email preferences, queue, triggers, and claim function.
+6. `supabase/20261003_add_in_app_notifications.sql` - announcements and per-user read receipts.
 
-4. Apply `supabase/20260902_add_project_problem.sql`, `supabase/20260906_add_advanced_project_metadata.sql`, `supabase/20260907_add_onboarding.sql`, and `supabase/20260907_add_technology_preference.sql` in order in the Supabase SQL editor. Existing databases should apply only the migrations not already run; see `supabase/README.md`. Apply the onboarding migration before deploying code that uses the quiz.
+See [Supabase setup](supabase/README.md), [email activation](supabase/EMAIL_NOTIFICATIONS.md), and [announcement setup](NOTIFICATIONS.md). Database schema setup alone does not configure the Gmail sender or worker schedule.
 
-5. Seed the initial tracks and projects:
-
-	```bash
-	npx tsx scripts/seed.ts
-	```
-
-	The seed is idempotent and adds 12 advanced platform projects across the existing JavaScript, Python, and Laravel tracks. Existing projects remain available as the foundation projects.
-
-6. Start the app:
-
-	```bash
-	npm run dev
-	```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-## Available Scripts
+## Commands and checks
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Create a production build |
-| `npm run start` | Start the production server |
-| `npm run lint` | Run ESLint |
-| `npx tsc --noEmit` | Run TypeScript validation |
-| `npx tsx scripts/seed.ts` | Seed tracks and projects |
+| `npm run dev` | Development server |
+| `npm run lint` | ESLint |
+| `npx tsc --noEmit` | TypeScript |
+| `npm run build` | Production build; Google Fonts may require network access |
+| `npm run start` | Serve the production build |
+| `node scripts/check-certificate-issuance.mjs` | Beginner milestone, seal upgrade, and isolated repair checks |
+| `node scripts/check-onboarding.mjs` | Onboarding logic |
+| `node scripts/check-profile.mjs` | Profile checks; inspect script prerequisites before running |
+| `node scripts/check-email-database.mjs` | Isolated email database tests with PGlite |
+| `npx tsx scripts/check-email-notifications.ts` | Email templates and worker authorization |
+| `node scripts/check-in-app-notifications.mjs` | Isolated announcement database/RLS tests |
+| `node scripts/check-notifications-api.mjs` | Announcement API validation and authorization with mocks |
 
-## Main Routes
+On Windows PowerShell, use `npm.cmd` and `npx.cmd` if script execution policy blocks the `.ps1` launchers. Some restricted environments also prevent `tsx` from reading OS user information; report that runner limitation separately from application failures.
 
-### Student
+Browser checks use mocked APIs and installed Microsoft Edge/Playwright; see their scripts and feature setup guides. Run `node scripts/check-notifications-browser.mjs` after building because it uses compiled CSS. Generated previews/screenshots stay under ignored `.next/`.
 
-- `/` - Landing page
-- `/explore` - Browse tracks
-- `/explore/[trackId]` - Track overview and enrollment
-- `/dashboard` - Enrolled tracks and progress
-- `/dashboard/tracks/[trackId]` - Track projects
-- `/dashboard/projects/[projectId]` - Project brief and submission
-- `/dashboard/certificates` - Earned certificates
+## Routes
 
-### Admin
+| Area | Routes |
+| --- | --- |
+| Learning | `/explore`, `/explore/[trackId]`, `/onboarding`, `/dashboard`, `/dashboard/tracks/[trackId]`, `/dashboard/projects/[projectId]` |
+| Account | `/auth/signin`, `/dashboard/settings` |
+| Notifications | `/dashboard/notifications`, `/admin/notifications` |
+| Admin | `/auth/admin-login`, `/admin`, `/admin/submissions`, `/admin/submissions/[submissionId]` |
+| Credentials | `/dashboard/certificates`, `/certificate/verify/[code]` |
+| PDF | `/api/certificates/download?code=...`; `&preview=true` provides a public inline preview |
 
-- `/auth/admin-login` - Admin sign-in
-- `/admin` - Submission overview and statistics
-- `/admin/submissions` - Filter and review submissions
-- `/admin/submissions/[submissionId]` - Approve or reject submissions
+## Certificate behavior
 
-### Public Verification
+Admins approve projects individually. `lib/certificate.ts` issues a certificate once four distinct beginner projects in the same track have approved submissions for that learner; advanced projects do not delay issuance. Repeated or concurrent approval checks reuse an existing credential. Beginner approval also unlocks advanced projects through the existing prerequisite checks.
 
-- `/certificate/verify/[code]` - Public certificate verification
-- `/api/certificates/verify/[code]` - Public verification API
-- `/api/certificates/download?code=...` - Authenticated PDF download
-- `/api/certificates/download?code=...&preview=true` - Inline PDF preview
+For learners whose four beginner approvals predate the fix, run `supabase/20261003_repair_beginner_certificates.sql` in Supabase SQL Editor. Review its eligible-count SELECT separately before running the full repair if desired. The repair creates only missing credentials, is safe to rerun, preserves existing IDs/dates/hashes, and timestamps newly issued certificates at repair time. Normal certificate email triggers apply to new credentials for opted-in learners.
 
-## Certificate Lifecycle
-
-1. A student submits repository and live project URLs.
-2. An administrator approves or rejects the submission with feedback.
-3. Rejected work can be updated and resubmitted.
-4. After all four projects in one track are approved, ZeroIntern creates one certificate.
-5. The certificate stores a unique credential code and SHA-256 hash derived from the student ID, track ID, and issue timestamp.
-6. The PDF includes a QR code linking to its public verification page.
+For an existing certificate, `lib/certificateData.ts` selects the advanced seal once four distinct advanced projects in its track are approved. The PDF renders only one seal, using the same 100-point image box and position for either asset. Changing the rendered seal does not create a certificate or change its credential ID, issue date, or hash.
 
 ## Deployment
 
-Deploy to Vercel or another Node-compatible hosting provider.
+Apply required SQL before deploying dependent code. Vercel hosts the production application and has a Supabase integration. Production application callback: `https://zerointern.vercel.app/api/auth/callback`. Google provider callback: `https://xjviagepjrqnlvebsoec.supabase.co/auth/v1/callback`.
 
-1. Add all `.env.local` values to the provider's environment configuration.
-2. Apply the Supabase migration in production.
-3. Add `https://your-domain.com/api/auth/callback` to the Google OAuth callback URLs.
-4. Set the production site URL in Supabase Authentication settings.
-5. Build and start with `npm run build` and `npm run start`.
-
-## Security Notes
-
-- Service-role operations remain server-side only.
-- Public verification exposes certificate and approved-project information only.
-- User submissions and certificates are protected by Supabase Row Level Security.
-- Admin sessions use a signed HTTP-only cookie in production.
-- Never commit secrets or service-role keys.
-
-## Verification Checklist
-
-Before launch, test Google authentication, enrollment, submissions, rejection and re-submission, admin approval, certificate creation after four approvals, PDF preview/download, QR verification, public verification without login, and mobile layouts at 375px, 768px, and desktop widths.
-
-The repository currently passes TypeScript validation, ESLint, and the production build.
-
-## Roadmap
-
-- Email notifications
-- Additional Go, Rust, and DevOps tracks
-- Employer-facing credential views
-- Code review and feedback history
-- Leaderboards and learner analytics
+Redeploy after environment changes. Record deployment commit, migration evidence, and smoke-test results in [Status](docs/STATUS.md). A passing local build or a Git push alone is not evidence of a successful production deployment. Verify authentication, review/resubmission, certificate preview/verification, notification read state, and opted-in email delivery using test accounts.

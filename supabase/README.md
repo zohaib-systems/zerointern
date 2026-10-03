@@ -101,3 +101,7 @@ by slug. It updates or inserts projects by track and title, retaining existing
 project IDs. It includes the 12 beginner and 12 advanced projects (four advanced
 projects per track). Do not insert placeholder IDs such as `track-1-js` into the
 UUID `track_id` column. No project inserts are required in the SQL Editor.
+
+## In-app announcements
+
+Apply `20261003_add_in_app_notifications.sql` before deploying dashboard/admin announcements. See [announcement setup](../NOTIFICATIONS.md) for behavior and checks, and [the migration ledger](../docs/STATUS.md) for recorded application evidence. In-app announcements work independently of email opt-in.
