@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PGlite } from '@electric-sql/pglite';
+
+const db = new PGlite();
+const user = '11111111-1111-4111-8111-111111111111';
+const other = '22222222-2222-4222-8222-222222222222';
+await db.exec(`
+  create role anon; create role authenticated; create role service_role bypassrls;
+  create schema auth;
+  create table auth.users(id uuid primary key);
+  create function auth.uid() returns uuid language sql as
+    $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+  grant usage on schema auth to authenticated, service_role;
+  insert into auth.users values ('${user}'), ('${other}');
+`);
+const migration = await readFile(new URL('../supabase/20261003_add_in_app_notifications.sql', import.meta.url), 'utf8');
+await db.exec(migration);
+await db.exec(migration);
+await db.exec('set role service_role');
+const { rows: [announcement] } = await db.query("insert into public.announcements(title,message,path) values ('Enable email notifications','Open settings to enable emails.','/dashboard/settings') returning id");
+await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${user}',false);`);
+assert.equal((await db.query('select * from public.announcements')).rows.length, 1, 'announcements available without email opt-in');
+await assert.rejects(db.exec("insert into public.announcements(title,message) values ('Fake','Message')"), 'users cannot publish');
+await assert.rejects(db.exec('delete from public.announcements'), 'users cannot remove announcements');
+await assert.rejects(db.exec(`insert into public.announcement_reads(user_id,announcement_id) values ('${other}','${announcement.id}')`), 'cannot mark another user read');
+await db.exec(`insert into public.announcement_reads(user_id,announcement_id) values ('${user}','${announcement.id}') on conflict do nothing;`);
+await db.exec(`insert into public.announcement_reads(user_id,announcement_id) values ('${user}','${announcement.id}') on conflict do nothing;`);
+assert.equal((await db.query('select * from public.announcement_reads')).rows.length, 1, 'mark-read is idempotent');
+await db.exec(`select set_config('request.jwt.claim.sub','${other}',false);`);
+assert.equal((await db.query('select * from public.announcement_reads')).rows.length, 0, 'other user still has unread notification');
+await assert.rejects(db.exec(`insert into public.announcement_reads(user_id,announcement_id) values ('${other}','33333333-3333-4333-8333-333333333333')`), 'unknown notification rejected');
+await db.exec('reset role; set role anon;');
+await assert.rejects(db.query('select * from public.announcements'), 'anonymous cannot read');
+await assert.rejects(db.query('select * from public.announcement_reads'), 'anonymous cannot read receipts');
+await db.exec('reset role; set role service_role;');
+await assert.rejects(db.exec("insert into public.announcements(title,message,path) values ('Unsafe','Message','https://example.com')"), 'external links rejected');
+await assert.rejects(db.exec("insert into public.announcements(title,message) values ('','Message')"), 'empty titles rejected');
+await db.close();
+console.log('Announcement migration rerun, admin publishing, email independence, read isolation, idempotency, foreign keys, anonymous access, and link validation passed.');
