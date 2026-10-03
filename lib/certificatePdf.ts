@@ -388,10 +388,10 @@ export async function createCertificatePDF(
 
     const isAdvanced = data.sealLevel === "advanced";
     const sealPath = path.join(process.cwd(), "public", isAdvanced ? "certificate-seal-advanced.png" : "certificate-seal.png");
-    const sealSize = isAdvanced ? 100 : 86;
+    const sealSize = 100;
 
     if (fs.existsSync(sealPath)) {
-      document.image(sealPath, isAdvanced ? 36 : 43, isAdvanced ? 302 : 309, {
+      document.image(sealPath, 36, 302, {
         width: sealSize,
         height: sealSize,
         fit: [sealSize, sealSize],
