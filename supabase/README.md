@@ -1,5 +1,11 @@
 # Supabase SQL setup
 
+## Email notifications
+
+Apply `20260913_add_email_notifications.sql` before deploying notification settings.
+See [EMAIL_NOTIFICATIONS.md](EMAIL_NOTIFICATIONS.md) for private Gmail configuration,
+the worker schedule, delivery limitations, and activation checks.
+
 ## Smart onboarding
 
 ### Technology preference follow-up

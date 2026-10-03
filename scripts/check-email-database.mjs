@@ -1,0 +1,67 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { PGlite } from "@electric-sql/pglite";
+
+const db = new PGlite();
+const user = "11111111-1111-1111-1111-111111111111";
+const other = "22222222-2222-2222-2222-222222222222";
+const project = "33333333-3333-3333-3333-333333333333";
+const track = "44444444-4444-4444-4444-444444444444";
+await db.exec(`
+  create role anon; create role authenticated; create role service_role bypassrls;
+  create schema auth;
+  create table auth.users(id uuid primary key);
+  create function auth.uid() returns uuid language sql as
+    $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+  create function auth.role() returns text language sql as
+    $$ select current_setting('request.jwt.claim.role', true) $$;
+  grant usage on schema auth to authenticated, service_role;
+  create table public.projects(id uuid primary key, title text);
+  create table public.tracks(id uuid primary key, title text);
+  create table public.submissions(id uuid primary key default gen_random_uuid(), user_id uuid, project_id uuid, status text, admin_notes text);
+  create table public.certificates(id uuid primary key default gen_random_uuid(), user_id uuid, track_id uuid);
+  insert into auth.users values ('${user}'), ('${other}');
+  insert into public.projects values ('${project}', 'Test project');
+  insert into public.tracks values ('${track}', 'Test track');
+`);
+const migration = await readFile(new URL("../supabase/20260913_add_email_notifications.sql", import.meta.url), "utf8");
+await db.exec(migration);
+await db.exec(migration); // Migration remains safe to rerun.
+const count = async () => Number((await db.query("select count(*) as n from public.email_notifications")).rows[0].n);
+await db.exec(`select set_config('request.jwt.claim.role', 'service_role', false);
+  insert into public.submissions(user_id, project_id, status) values ('${user}', '${project}', 'PENDING');
+  update public.submissions set status = 'APPROVED';`);
+assert.equal(await count(), 0, "default off does not enqueue");
+await db.exec(`insert into public.notification_preferences(user_id,email_enabled) values ('${user}',true);
+  update public.submissions set status = 'PENDING';
+  update public.submissions set status = 'REJECTED', admin_notes = 'Fix tests';
+  update public.submissions set status = 'REJECTED';`);
+assert.equal(await count(), 1, "same status does not duplicate");
+await db.exec("update public.submissions set status = 'PENDING'; update public.submissions set status = 'REJECTED';");
+assert.equal(await count(), 2, "resubmission receives a fresh event");
+await db.exec(`insert into public.certificates(user_id,track_id) values ('${user}','${track}');`);
+assert.equal(await count(), 3);
+await db.exec("begin; update public.submissions set status = 'PENDING'; update public.submissions set status = 'APPROVED'; rollback;");
+assert.equal(await count(), 3, "events roll back with the business update");
+await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','${other}',false);`);
+assert.equal((await db.query("select * from public.notification_preferences")).rows.length, 0);
+await assert.rejects(db.exec(`insert into public.notification_preferences(user_id,email_enabled) values ('${user}',false);`));
+await assert.rejects(db.query("select * from public.email_notifications"));
+await assert.rejects(db.query("select * from public.claim_email_notification()"));
+await db.exec(`select set_config('request.jwt.claim.sub','${user}',false); update public.notification_preferences set email_enabled=false; reset role;`);
+assert.equal((await db.query("select email_enabled from public.notification_preferences")).rows[0].email_enabled, false);
+await db.exec("update public.submissions set status = 'PENDING'; select set_config('request.jwt.claim.role','authenticated',false);");
+await assert.rejects(db.exec("update public.submissions set status = 'APPROVED';"));
+await db.exec("select set_config('request.jwt.claim.role','service_role',false); set role service_role;");
+assert.equal((await db.query("select email_enabled from public.notification_preferences")).rows[0].email_enabled, false, "worker can recheck preference");
+const first = (await db.query("select * from public.claim_email_notification()")).rows[0];
+const second = (await db.query("select * from public.claim_email_notification()")).rows[0];
+assert.notEqual(first.id, second.id, "claimed rows cannot be claimed again");
+assert.equal(first.attempts, 1);
+await db.exec("update public.email_daily_budget set attempts=100;");
+assert.equal((await db.query("select * from public.claim_email_notification()")).rows.length, 0, "daily cap enforced");
+await db.exec(`update public.email_notifications set locked_at=now()-interval '6 minutes' where id='${first.id}';`);
+await db.query("select * from public.claim_email_notification()");
+assert.equal((await db.query(`select status from public.email_notifications where id='${first.id}'`)).rows[0].status, "failed");
+await db.close();
+console.log("Database migration, opt-in, event atomicity, resubmission, RLS, claims, budget, and abandoned lease checks passed.");
