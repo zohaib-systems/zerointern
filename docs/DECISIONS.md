@@ -12,6 +12,7 @@ These entries describe accepted choices. A future agent should explain a propose
 | Compute seal level on certificate reads | Existing credentials upgrade visually without new records, dates, IDs, or hashes. No extra certificate-earned event is produced by this visual upgrade. |
 | Give both seals the same 100-point rendering box | Beginner rendering was increased to match the advanced rendering box and position. |
 | Keep email notifications opt-in | Users choose whether to receive approval, rejection, and certificate messages. Announcements can remind them without enabling email on their behalf. |
+| Allow explicit admin email to one user (2026-10-10) | A separate admin action may email a selected confirmed account regardless of email preference. The worker bypass is limited to `admin_message`; automated approval, rejection, and certificate emails remain opt-in. This does not change preference settings or announcement behavior. |
 | Use three professional email templates | Personalized greetings; congratulations for approval/certification; constructive rejection feedback and encouragement to resubmit. Provide an action button and preference link in each email. |
 | Use an email queue and conservative retries | Record events with their business transactions; avoid automatic resends when SMTP acceptance is uncertain. |
 | Store broadcasts once and reads per user | Avoid copying announcements to every account; unread state survives device changes. Broadcasts also appear for future users. |

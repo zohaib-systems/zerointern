@@ -6,6 +6,16 @@ Apply `20260913_add_email_notifications.sql` before deploying notification setti
 See [EMAIL_NOTIFICATIONS.md](EMAIL_NOTIFICATIONS.md) for private Gmail configuration,
 the worker schedule, delivery limitations, and activation checks.
 
+Before deploying direct admin emails to one user, also apply
+`20261010_add_admin_email_messages.sql`. It adds a queue kind for explicit admin
+messages; only that kind bypasses user email preferences. Existing automated
+emails still require opt-in, and this migration does not change announcement behavior.
+
+Before deploying direct admin emails to one user, also apply
+`20261010_add_admin_email_messages.sql`. It adds a queue kind for explicit admin
+messages; only that kind bypasses user email preferences. Existing automated
+emails still require opt-in, and this migration does not change announcement behavior.
+
 ## Smart onboarding
 
 ### Technology preference follow-up

@@ -27,6 +27,7 @@ These commits prove local repository history, not remote push or production depl
 | Personalized email redesign | Implemented and committed locally; template escaping, worker authorization, lint, TypeScript, build, and 390px preview checks passed in prior session | No production inbox test or real email sent by the agent during redesign |
 | Beginner certificate issuance | Fixed locally; distinct beginner approvals, repeat/concurrent issuance, seal upgrade, lookup errors, and repair rerun/hash checks passed | Pending deployment and one-time SQL repair |
 | Admin certificate review | Added a Certificates tab to `/admin/submissions` with issued count, paginated credential list, and inline PDF preview links; lint, TypeScript, and production build passed | Not deployed or production verified |
+| Admin email to one user | Added a separate recipient search and email composer; queues confirmed-user messages as `admin_message`, which alone bypasses preference checks. Existing announcements and automated opt-in email behavior remain unchanged. Lint, TypeScript, production build, and existing isolated email database check passed; email template/worker check could not start because Node `tsx` failed in this environment at `os.userInfo()` with `ENOMEM` | Not deployed; SQL migration application and real email delivery unverified |
 | AI handoff documentation | Added/updated in this task | Documentation only; no deployment required |
 
 Prior-session checks describe evidence from that work, not tests rerun for unrelated changes. Certificate fix checks are recorded separately below. Browser mocks and local previews do not prove Supabase integration or real email-client delivery.
@@ -41,6 +42,7 @@ Prior-session checks describe evidence from that work, not tests rerun for unrel
 | `20260907_add_technology_preference.sql` | Existing quiz dependency; live application history unverified |
 | `20260913_add_email_notifications.sql` | Required for email settings/queue; live application history and worker schedule unverified |
 | `20261003_add_in_app_notifications.sql` | User-reported complete in the preceding notification conversation; not independently checked against Supabase |
+| `20261010_add_admin_email_messages.sql` | Prepared locally; required before deploying admin direct email; production application pending |
 
 Do not blindly rerun the base schema or assume a missing ledger entry means the migration was never applied. Inspect the intended environment before changing it.
 

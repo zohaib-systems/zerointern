@@ -56,6 +56,7 @@ This repository uses standalone SQL files, not configured Supabase CLI migration
 4. `supabase/20260907_add_technology_preference.sql` - fourth quiz question.
 5. `supabase/20260913_add_email_notifications.sql` - email preferences, queue, triggers, and claim function.
 6. `supabase/20261003_add_in_app_notifications.sql` - announcements and per-user read receipts.
+7. `supabase/20261010_add_admin_email_messages.sql` - allows the existing email queue to deliver explicitly admin-sent messages regardless of recipient opt-in.
 
 See [Supabase setup](supabase/README.md), [email activation](supabase/EMAIL_NOTIFICATIONS.md), and [announcement setup](NOTIFICATIONS.md). Database schema setup alone does not configure the Gmail sender or worker schedule.
 

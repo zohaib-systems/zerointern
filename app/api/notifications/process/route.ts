@@ -30,11 +30,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { data: preference, error: preferenceError } = await supabase.from("notification_preferences").select("email_enabled").eq("user_id", event.user_id).maybeSingle();
-    if (preferenceError) throw new Error("Preference lookup failed");
-    if (!preference?.email_enabled) {
-      await finish({ status: "skipped" });
-      return NextResponse.json({ processed: 1 });
+    if (event.kind !== "admin_message") {
+      const { data: preference, error: preferenceError } = await supabase.from("notification_preferences").select("email_enabled").eq("user_id", event.user_id).maybeSingle();
+      if (preferenceError) throw new Error("Preference lookup failed");
+      if (!preference?.email_enabled) {
+        await finish({ status: "skipped" });
+        return NextResponse.json({ processed: 1 });
+      }
     }
     const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(event.user_id);
     if (userError) throw new Error("Recipient lookup failed");

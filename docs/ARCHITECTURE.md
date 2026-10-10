@@ -40,6 +40,8 @@ The email SQL migration adds `notification_preferences`, `email_notifications`, 
 
 `app/api/notifications/process/route.ts` checks its bearer secret, claims one event, rechecks opt-in, reads the confirmed Auth recipient, resolves their profile/Auth name, and sends through Gmail SMTP. `lib/email-delivery.ts` defines transport and cautious retry behavior. `lib/email-template.ts` creates matching HTML/plain-text approval, rejection, and certificate emails; rejection feedback is escaped and preserves line breaks. Emails link to the relevant project/certificates and email settings.
 
+`/admin/notifications` keeps its existing all-user announcement composer and history. A separate one-recipient email form uses `/api/admin/direct-email` to search users and enqueue an `admin_message`. The worker bypasses the email preference lookup only for this explicit admin message type; all approval, rejection, and certificate events still require opt-in. `20261010_add_admin_email_messages.sql` adds the queue kind constraint. The admin message template escapes user-provided content and does not modify preferences.
+
 The existing claim function caps attempts at 100 per UTC day. Ambiguous SMTP acceptance is not automatically resent. Gmail acceptance is not proof of inbox delivery. Configuration and Cron/Vault scheduling are described in `supabase/EMAIL_NOTIFICATIONS.md`.
 
 ## In-app announcements

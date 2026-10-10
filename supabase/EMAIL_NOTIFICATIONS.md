@@ -17,7 +17,9 @@ default to off; no historical emails are backfilled.
 3. Keep credentials out of source control, SQL files, screenshots, and chat.
    Do not change the integration-managed Supabase variables.
 4. Apply `20260913_add_email_notifications.sql` in the Supabase SQL Editor before
-   deploying the code. This repo uses standalone SQL migrations.
+   deploying the code. Before deploying the separate direct admin email feature,
+   also apply `20261010_add_admin_email_messages.sql`. This repo uses standalone
+   SQL migrations.
 5. Redeploy Vercel after configuring the variables.
 
 Google requirements: https://support.google.com/accounts/answer/185833
@@ -63,7 +65,9 @@ Scheduler reference: https://supabase.com/docs/guides/functions/schedule-functio
 - RLS restricts preferences to their owner; only the service role accesses the queue.
 - Database triggers enqueue opted-in events in the same transaction as review
   updates/certificate inserts. Concurrent review updates use conditional writes.
-- The worker rechecks preferences and reads the current confirmed Auth email.
+- The worker rechecks preferences for approval, rejection, and certificate events
+  and reads the current confirmed Auth email. Explicit `admin_message` events are
+  the sole preference bypass and are created only by the admin-only endpoint.
 - Temporary SMTP refusals retry up to five attempts with increasing delay.
 - SMTP does not provide exactly-once delivery. Ambiguous timeouts and interrupted
   workers become `failed` for manual inspection, rather than automatic resending.

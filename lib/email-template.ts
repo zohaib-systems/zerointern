@@ -1,4 +1,4 @@
-﻿export type EmailEvent = { id: string; kind: "approved" | "rejected" | "certificate"; title: string; feedback: string | null; path: string };
+﻿export type EmailEvent = { id: string; kind: "approved" | "rejected" | "certificate" | "admin_message"; title: string; feedback: string | null; path: string };
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
@@ -6,6 +6,17 @@ function escapeHtml(value: string) {
 
 export function emailTemplate(event: EmailEvent, recipientName = "there") {
   const origin = "https://zerointern.vercel.app";
+  if (event.kind === "admin_message") {
+    const name = recipientName.replace(/[\r\n]+/g, " ").trim() || "there";
+    const subject = event.title.replace(/[\r\n]+/g, " ").trim();
+    const message = event.feedback?.trim() || "";
+    const paragraphs = message.split(/\r?\n/).map((line) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#334155">${escapeHtml(line)}</p>`).join("");
+    return {
+      subject,
+      text: [`Hi ${name},`, message, "Best regards,\nThe ZeroIntern Team"].join("\n\n"),
+      html: `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#172033"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9"><tr><td align="center" style="padding:32px 12px"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px"><tr><td style="padding:24px 28px;border-bottom:3px solid #20a562"><a href="${origin}" style="font-size:24px;font-weight:bold;color:#047857;text-decoration:none">ZeroIntern</a></td></tr><tr><td style="padding:28px;overflow-wrap:anywhere"><p style="margin:0 0 20px;font-size:16px;line-height:1.7;color:#334155">Hi ${escapeHtml(name)},</p>${paragraphs}<p style="margin:24px 0 0;font-size:16px;line-height:1.7;color:#334155">Best regards,<br>The ZeroIntern Team</p></td></tr></table></td></tr></table></body></html>`,
+    };
+  }
   if (!/^\/dashboard\/(projects\/[0-9a-f-]+|certificates)$/.test(event.path)) throw new Error("Invalid email destination");
   const name = recipientName.replace(/[\r\n]+/g, " ").trim() || "there";
   const subjectName = name === "there" ? "" : `, ${name}`;
