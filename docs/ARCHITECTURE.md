@@ -24,7 +24,7 @@ The SQL function `select_onboarding_track` atomically updates the active track a
 
 ## Reviews and certificates
 
-Admin review handlers are under `app/api/submissions/[id]/approve` and `reject`; UI is in `components/admin/`. Review feedback is stored as `admin_notes`.
+Admin review handlers are under `app/api/submissions/[id]/approve` and `reject`; UI is in `components/admin/`. Review feedback is stored as `admin_notes`. `/admin/submissions` also has a Certificates tab that counts issued credentials, lists them by issue date, and links to the existing inline PDF preview endpoint.
 
 - `lib/certificate.ts`: issuance, verification codes, SHA-256 integrity hash. Issuance requires four distinct approved beginner projects in the same track. Repeated checks reuse the existing certificate; a concurrent insert conflict returns the winning credential.
 - `lib/certificateData.ts`: loads approved projects belonging to the certificate's track, checks integrity/status, and derives `sealLevel` from four approved advanced projects.

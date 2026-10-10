@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-10-03. This document separates repository evidence from remote verification. Update it at the end of meaningful work.
+Last updated: 2026-10-10. This document separates repository evidence from remote verification. Update it at the end of meaningful work.
 
 ## Repository evidence
 
@@ -26,6 +26,7 @@ These commits prove local repository history, not remote push or production depl
 | In-app announcements | Implemented; isolated database/RLS, API, and mocked browser checks passed; lint, TypeScript, and build passed in prior session | User reported completion after migration instructions; live migration and deployment not independently verified |
 | Personalized email redesign | Implemented and committed locally; template escaping, worker authorization, lint, TypeScript, build, and 390px preview checks passed in prior session | No production inbox test or real email sent by the agent during redesign |
 | Beginner certificate issuance | Fixed locally; distinct beginner approvals, repeat/concurrent issuance, seal upgrade, lookup errors, and repair rerun/hash checks passed | Pending deployment and one-time SQL repair |
+| Admin certificate review | Added a Certificates tab to `/admin/submissions` with issued count, paginated credential list, and inline PDF preview links; lint, TypeScript, and production build passed | Not deployed or production verified |
 | AI handoff documentation | Added/updated in this task | Documentation only; no deployment required |
 
 Prior-session checks describe evidence from that work, not tests rerun for unrelated changes. Certificate fix checks are recorded separately below. Browser mocks and local previews do not prove Supabase integration or real email-client delivery.
