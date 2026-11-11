@@ -14,6 +14,40 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon.png",
   },
+  // Add canonical URL for SEO
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL,
+  },
+  // Open Graph defaults for better sharing
+  openGraph: {
+    title: "ZeroIntern",
+    description: "Build, learn, and ship projects through guided tracks.",
+    url: process.env.NEXT_PUBLIC_SITE_URL,
+    siteName: "ZeroIntern",
+    type: "website",
+    images: [
+      {
+        url: `${process.env.NEXT_PUBLIC_SITE_URL}/zerointern-logo.png.png`,
+        width: 1200,
+        height: 630,
+        alt: "ZeroIntern Logo",
+      },
+    ],
+  },
+  // Twitter card metadata
+  twitter: {
+    card: "summary_large_image",
+    site: "@zerointern",
+    title: "ZeroIntern",
+    description: "Build, learn, and ship projects through guided tracks.",
+    images: [`${process.env.NEXT_PUBLIC_SITE_URL}/zerointern-logo.png.png`],
+  },
+
+  title: "ZeroIntern",
+  description: "Build, learn, and ship projects through guided tracks.",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({

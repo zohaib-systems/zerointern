@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://zerointern.vercel.app/sitemap.xml
