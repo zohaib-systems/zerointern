@@ -43,11 +43,6 @@ export const metadata: Metadata = {
     images: [`${process.env.NEXT_PUBLIC_SITE_URL}/zerointern-logo.png.png`],
   },
 
-  title: "ZeroIntern",
-  description: "Build, learn, and ship projects through guided tracks.",
-  icons: {
-    icon: "/icon.png",
-  },
 };
 
 export default function RootLayout({
